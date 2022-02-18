@@ -30,11 +30,22 @@ UCharacterAnimInstance::UCharacterAnimInstance()
 	{
 		aimingMontage = Aim_Montage.Object;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> Cover_Montage(L"AnimMontage'/Game/DevFile/Stand_to_Crouch_Rifle_Ironsights_Montage.Stand_to_Crouch_Rifle_Ironsights_Montage'");
+	if (Cover_Montage.Succeeded())
+	{
+		coverMontage = Cover_Montage.Object;
+	}
 }
 
 void UCharacterAnimInstance::BeShot()
 {
 	Montage_Play(shotMontage, 0.7f);
+}
+
+void UCharacterAnimInstance::BeCover()
+{
+	Montage_Play(coverMontage, 1.f);
 }
 
 void UCharacterAnimInstance::Hit()
@@ -53,4 +64,9 @@ void UCharacterAnimInstance::Death()
 void UCharacterAnimInstance::Aiming()
 {
 	Montage_Play(aimingMontage, 1.0f);
+}
+
+void UCharacterAnimInstance::StopMontage()
+{
+	StopAllMontages(0.5f);
 }

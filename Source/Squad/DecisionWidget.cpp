@@ -3,6 +3,8 @@
 #include "DecisionWidget.h"
 #include "SquadGameMode.h"
 #include "BattleTrigger.h"
+#include "BattleController.h"
+#include "SquadGameInstance.h"
 
 void UDecisionWidget::NativeConstruct()
 {
@@ -27,7 +29,7 @@ void UDecisionWidget::NativeConstruct()
 	}
 }
 
-void UDecisionWidget::OnClickEvent1()
+void UDecisionWidget::OnClickEvent1() // ¿¸≈ı
 {
 	
 	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
@@ -35,10 +37,13 @@ void UDecisionWidget::OnClickEvent1()
 	
 }
 
-void UDecisionWidget::OnClickEvent2()
+void UDecisionWidget::OnClickEvent2() // µµ∏¡
 {
 	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	Cast<ABattleTrigger>(gameMode->BTIns)->DeleteBattleTrigger();
+	Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
+	Cast<ASquadCameraManager>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns)->Control_ResultToRun();
+	Cast<ABattleTrigger>(gameMode->BTIns)->DeleteEnemyCharacter();
+	
 	RemoveFromParent();
 	
 	//gameMode->BTIns = nullptr;

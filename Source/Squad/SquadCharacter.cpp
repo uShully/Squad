@@ -161,6 +161,7 @@ void ASquadCharacter::Characterdeath()
 	GetCharacterMovement()->SetMovementMode(MOVE_None);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	StateEnum = EStateEnum::SE_Death;
 
 	IsDeath = true;
 }
@@ -188,5 +189,5 @@ void ASquadCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Test();
+	//Test();
 }

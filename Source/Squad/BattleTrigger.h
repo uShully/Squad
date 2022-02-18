@@ -83,6 +83,7 @@ public:
 	UPROPERTY()
 	TArray<AActor*> EnemyList;
 
+	void StartBattleEvent();
 	void InitBattleSetting();
 
 	bool OverlapSwitch = false;
@@ -110,15 +111,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Stage")
 	TSubclassOf<AActor> EventBoxToSpawn;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Stage")
+	TSubclassOf<AActor> EventSpotToSpawn;
+
+	void SpawnedEventSpot();
+
 	UFUNCTION()
 		void DeleteBattleTrigger();
 
-	void Debug_Fuc();
+	void BattleTrigger_PlayerSpreadOut();
 
 	//UFUNCTION()
 	//void SetEventBoxState(EEventBoxState EventBoxState);
 
 	TArray<APlayerSquadCharacter*> BattleTrigger_FrindlyCharacterList;
+
+	void DeleteEnemyCharacter();
 
 private:
 

@@ -108,9 +108,12 @@ private:
 	
 	void Spawned_Obstacle(AActor* Grid, EEventBoxState Pattern);
 	int32 Obstacle_XPosCount = 1;
+	int32 Obstacle_XPosCount_Enemy = 10;
 	bool Obstacle_YPosSwitch = false;
 
 	void Spawned_ObstacleCheck();
+
+	float CorrentionSpawnObstacle;
 
 public:
 

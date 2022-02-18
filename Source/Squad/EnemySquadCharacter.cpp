@@ -2,6 +2,11 @@
 
 #include "EnemySquadCharacter.h"
 #include "CharacterAnimInstance.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
+#include "SquadGameInstance.h"
+#include "Grid.h"
+#include "BattleController.h"
 
 
 AEnemySquadCharacter::AEnemySquadCharacter()
@@ -62,18 +67,20 @@ float AEnemySquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& 
 void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 {
 	//UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
-
-	Characterdeath();
+	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	Cast<ABattleController>(gameIns->BCIns)->RemoveFromEnemyEndBattleArray(ArrayNumbering);
+	Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
 
 	UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
 	CharAnimInst->Death();
 
-	StateEnum = EStateEnum::SE_Death;
+	
+
+	
 
 	if (Fun_Death.IsBound())
 	{
 		Fun_Death.Execute();
-		UE_LOG(LogClass, Log, L"Death");
 	}
 
 	Fun_Death.Unbind();
@@ -95,4 +102,28 @@ void AEnemySquadCharacter::SetBelongToBattleTrigger(ABattleTrigger* BattleTrigge
 ABattleTrigger* AEnemySquadCharacter::GetBelongToBattleTrigger()
 {
 	return BelongToBattleTrigger;
+}
+
+void AEnemySquadCharacter::Enemy_Shot(AActor* Target)
+{
+	    UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+	
+	
+
+		CharAnim->BeShot();
+		GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
+		UGameplayStatics::PlaySoundAtLocation(this, Fire_Sound, GetActorLocation(), 0.2f);
+		UGameplayStatics::ApplyDamage(Target, Damage, GetWorld()->GetFirstPlayerController(), this, nullptr);
+		
+
+}
+
+void AEnemySquadCharacter::SetUnderGrid(AGrid* Grid)
+{
+	UnderGrid = Grid;
+}
+
+AGrid* AEnemySquadCharacter::GetUnderGrid()
+{
+	return UnderGrid;
 }

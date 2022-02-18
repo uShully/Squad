@@ -12,21 +12,22 @@ void UBattleWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 
-
+	/*
 	MoveButton = Cast<UButton>(GetWidgetFromName("MOVEBUTTON"));
 	if (MoveButton != nullptr)
 	{
 		MoveButton->OnClicked.AddDynamic(this, &UBattleWidget::OnClickMoveButton);
 	}
+	*/
 	AttackButton = Cast<UButton>(GetWidgetFromName("ATTACKBUTTON"));
 	if (AttackButton != nullptr)
 	{
 		AttackButton->OnClicked.AddDynamic(this, &UBattleWidget::OnClickAttackButton);
 	}
-	TurnButton = Cast<UButton>(GetWidgetFromName("TURNBUTTON"));
-	if (TurnButton != nullptr)
+	CoverButton = Cast<UButton>(GetWidgetFromName("COVERBUTTON"));
+	if (CoverButton != nullptr)
 	{
-		TurnButton->OnClicked.AddDynamic(this, &UBattleWidget::OnClickTurnButton);
+		CoverButton->OnClicked.AddDynamic(this, &UBattleWidget::OnClickCoverButton);
 	}
 
 
@@ -91,13 +92,17 @@ void UBattleWidget::OnClickAttackButton()
 
 }
 
-void UBattleWidget::OnClickTurnButton()
+void UBattleWidget::OnClickCoverButton()
 {
 	auto GameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (GameIns->BCIns != nullptr && GameIns->BCIns->IsBattleStart == true)
+	if(GameIns->SelectedCharacter != nullptr)
 	{
-		GameIns->BCIns->EndTurnSystem();
+		Cast<APlayerSquadCharacter>(GameIns->SelectedCharacter)->SetCover();
+		if (GameIns->BCIns != nullptr && GameIns->BCIns->IsBattleStart == true)
+		{
+			//GameIns->BCIns->EndTurnSystem();
+		}
 	}
 }
 

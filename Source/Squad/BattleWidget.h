@@ -24,18 +24,18 @@ class SQUAD_API UBattleWidget : public UUserWidget
 		void OnClickAttackButton();
 
 	UFUNCTION()
-		void OnClickTurnButton();
+		void OnClickCoverButton();
 
 	////////////////////////////////////////
 
 	UPROPERTY(meta = (BindWidget))
 		class UButton* AttackButton;
 
-	UPROPERTY(meta = (BindWidget))
-		class UButton* MoveButton;
+	//UPROPERTY(meta = (BindWidget))
+	//	class UButton* MoveButton;
 	   
 	UPROPERTY(meta = (BindWidget))
-		class UButton* TurnButton;
+		class UButton* CoverButton;
 
 
 	//////////////////////////////////////

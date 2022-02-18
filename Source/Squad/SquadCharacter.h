@@ -74,7 +74,7 @@ public:
 
 	/** Called for side to side input */
 	void MoveRight(float Val);
-	
+
 
 public:
 	

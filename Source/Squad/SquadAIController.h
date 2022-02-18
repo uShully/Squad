@@ -4,10 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
-#include "PlayerSquadCharacter.h"
-#include "EnemySquadCharacter.h"
-#include "SquadGameInstance.h"
-#include "SquadCameraManager.h"
 #include "SquadAIController.generated.h"
 
 /**
@@ -25,10 +21,10 @@ class SQUAD_API ASquadAIController : public AAIController
 
 
 
-	APlayerSquadCharacter* PlayerChar;
-	AEnemySquadCharacter* EnemyChar;
+	class APlayerSquadCharacter* PlayerChar;
+	class AEnemySquadCharacter* EnemyChar;
 
-	ASquadCameraManager* Camera;
+	class ASquadCameraManager* Camera;
 
 public:
 
@@ -37,6 +33,8 @@ public:
 	void EnemyCharacter_ActiveAI();
 	void EnemyCharacter_ShotAI();
 	void EnemyCharacter_BasicAIMove();
+	void EnemyChararacter_SetFrindlyCharacterList(TArray<AActor*> List);
+
 	////////////////////////////////
 
 	void PlayerCharater_Move();
@@ -44,11 +42,12 @@ public:
 
 	void PlayerCharacter_SpreadOut();
 
+	TArray<AActor*> FrindlyCharacterList;
+
 private:
 
 	bool PlayerPawn = false;
 	bool AIPawn = false;
 
 	
-
 };

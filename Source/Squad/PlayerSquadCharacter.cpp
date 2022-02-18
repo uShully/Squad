@@ -1,5 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#define BuffOn  true
+#define BuffOff false
+
 #include "PlayerSquadCharacter.h"
 #include "CharacterAnimInstance.h"
 #include "SquadGameInstance.h"
@@ -88,12 +91,13 @@ void APlayerSquadCharacter::Debug_Shot(ASquadCharacter* Target)
 		GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
 
 		UGameplayStatics::PlaySoundAtLocation(this, Fire_Sound, GetActorLocation(), 0.2f);
-	
-		UGameplayStatics::ApplyDamage(Target, 1.0f, GetWorld()->GetFirstPlayerController(), this, nullptr);
+		UGameplayStatics::ApplyDamage(Target, Damage, GetWorld()->GetFirstPlayerController(), this, nullptr);
 	}
 
-	if(pGridOnCharacter != nullptr)
-	pGridOnCharacter->SetGridInfo_Material_temp2();
+	SetCharacterEnd();
+
+	if(UnderGrid != nullptr)
+		UnderGrid->SetGridInfo_Material_temp2();
 }
 
 ////////////////////////////// Move //////////////////////////////////////////////
@@ -105,7 +109,25 @@ void APlayerSquadCharacter::SetMoveReady()
 
 }
 
+////////////////////////////// Cover //////////////////////////////////////////////
 
+void APlayerSquadCharacter::SetCover()
+{
+	if(StateEnum == EStateEnum::SE_Stay)
+	{
+		UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+
+		CharAnim->BeCover();
+		Buff_Cover(BuffOn);
+		SetCharacterEnd();
+
+		if (UnderGrid != nullptr)
+			UnderGrid->SetGridInfo_Material_temp2();
+
+		gameIns->BCIns->EndTurnSystem();
+	}
+}
 
 void APlayerSquadCharacter::SetStay()
 {
@@ -120,14 +142,20 @@ void APlayerSquadCharacter::SetStay()
 void APlayerSquadCharacter::SetCharacterEnd()
 {
 	StateEnum = EStateEnum::SE_End;
+	Cast<ABattleController>((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns))->AddPlayerEndBattleArray(this);
+	UE_LOG(LogClass, Log, TEXT(" Add EndArray " ));
 }
 
 float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	const float ActualDamage = Super::TakeDamage(Damage - CharacterDefenceArmor, DamageEvent, EventInstigator, DamageCauser);
 
 	if (LifePoint > 0)
 	{
+		if (IsActiveBuffCover == true)
+		{
+			Buff_Cover(BuffOff);
+		}
 		UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 		if (CharAnimInst != nullptr)
 		{
@@ -140,19 +168,36 @@ float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 		UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 		if (CharAnimInst != nullptr)
 		{
-			UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
-			CharAnimInst->Death();
+			PlayerDeath(CharAnimInst);
 		}
 
 	}
 
-	return ActualDamage;
+	return ActualDamage ;
+}
+
+void APlayerSquadCharacter::PlayerDeath(UCharacterAnimInstance* CharAnimInst)
+{
+	//UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
+	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	Cast<ABattleController>(gameIns->BCIns)->RemoveFromPlayerEndBattleArray(ArrayNumbering, numbering);
+	Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
+
+	UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
+	CharAnimInst->Death();
+
 }
 
 void APlayerSquadCharacter::PlaySelectedSound()
 {
 	// 
 	UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+}
+
+void APlayerSquadCharacter::StopMontage()
+{
+	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
+	CharAnimInst->StopMontage();
 }
 
 void APlayerSquadCharacter::InputTest()
@@ -168,4 +213,53 @@ void APlayerSquadCharacter::SetUnderGrid(AGrid* Grid)
 AGrid* APlayerSquadCharacter::GetUnderGrid()
 {
 	return UnderGrid;
+}
+
+int32 APlayerSquadCharacter::GetBattleLineNumber()
+{
+	return BattleLineNumber;
+}
+
+void APlayerSquadCharacter::Buff_System() // 임시로 종료시키는 시스템으로 변경
+{
+	Buff_Cover(BuffOff);
+}
+
+void APlayerSquadCharacter::Buff_Cover(bool Onoff)
+{
+	// 이미 켜져있을때는?
+	 // 종료하게 만든다 - 카운트가 생기면?
+	 // 카운트가 0가 아닐시 아무일도 안일어남 - 추후 추가예정
+	// 안켜져있을때
+	 // 켜지게 하면 됨
+
+	if (Onoff == BuffOff) // 버프 체크용 - 임시로 버프활성화시 버프를 끄는 함수로 변경
+	{
+		if (IsActiveBuffCover == true) // 버프가 켜져있으면 종료
+		{
+			CharacterDefenceArmor -= 1.f;
+			IsActiveBuffCover = false;
+			//UE_LOG(LogClass, Log, L"Buff off");
+		}
+		else
+		{
+
+		}
+			//UE_LOG(LogClass, Log, L"Buff Not Active");
+		// 꺼저있을때는 아무일도 안일어남
+		
+	}
+	else // Onoff == BuffOn 버프 활성화
+	{
+		if(IsActiveBuffCover == false) // 버프가 비활성화시 버프가 활성화
+		{ 
+			CharacterDefenceArmor += 1.f;
+			IsActiveBuffCover = true;
+			//UE_LOG(LogClass, Log, L"Buff On");
+		}
+		else // 버프가 이미 활성화됬을때는 아무일도 안일어남
+		{
+			//UE_LOG(LogClass, Log, L"Buff Already Active");
+		}
+	}
 }

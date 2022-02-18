@@ -34,7 +34,29 @@ public:
 	void ClearArray();
 
 	void StartTurnSystem();
+	void StartTurnSystem_init();
 
+	// 2/12 추가
+	TArray<AActor*> PlayerStartBattleArray;
+	TArray<AActor*> PlayerEndBattleArray; // 전투가 끝난 플레이어 캐릭터를 집어넣는다
+	TArray<AActor*> tempPlayerEndBattleArray;
+	TArray<AActor*> EnemyStartBattleArray;
+	TArray<AActor*> EnemyEndBattleArray; // 전투가 끝난 플레이어 캐릭터를 집어넣는다
+
+	// 2/16 추가
+
+	void ControlCharacterCameraMovement(bool PlayerMovementSwitch);
+
+	//
+
+	void RemoveFromPlayerEndBattleArray(int32 ArrayNumbering ,int32 Numbering);
+
+	void AddPlayerEndBattleArray(AActor * Actor);
+	
+	void RemoveFromEnemyEndBattleArray(int32 ArrayNumbering);
+	void ResetPlayerEndBattleArray();
+
+	//
 	void EndTurnSystem();
 	void EndTurnSystem_Enemy();
 
@@ -58,7 +80,10 @@ public:
 	
 	
 
-	
+	void ResultBattle();
+
+	void ResultBattle_temp();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -66,7 +91,7 @@ protected:
 	BattleSystemStat SystemState;
 
 	void WorkEnemyAI();
-	void ResultBattle();
+	
 
 public:	
 	// Called every frame
@@ -85,9 +110,13 @@ public:
 	void AddEnemyDeathCount();
 	
 	int32 EnemyDeathCount = 0;
+	int32 PlayerDeathCount = 0;
 
 
 	bool WhosTurn = false; // false = 아군 true = 적군
 
 
+
+	FTimerHandle WaitHandle;
+	float WaitTime = 2.f;
 };

@@ -30,6 +30,12 @@ public:
 	void SortFrindlyCharList();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+	// 2.14
+	void PlusTargetArmLeght();
+	void MinusTargetArmLength();
+	void PlusCameraBoomRotator();
+	void MinusCameraBoomRotator();
+
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
@@ -54,6 +60,8 @@ public:
 	void zoomswitch();
 	bool ZoomBool = false;
 
+	bool MoveSwitch = false;
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		float MaxTargetArmLength;
 
@@ -71,10 +79,31 @@ public:
 
 	void Control_SetBattleInit(FVector Loc);
 
+	void Control_SetBattleCameraLocation(float DeltaTime);
 
+	void Control_SetBattleEnd();
+
+	void Control_ResultToRun();
+
+	FVector ExplorerLocation;
+	FVector BattleLocation;
+
+	bool IsExploreToBattle = false;
+	bool IsBattleToExplore = false;
+	
 	//////////////////////////////////////////////////////////
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UBoxComponent* BoxColiision;
+
+	FRotator ExploreRot;
+	FRotator BattleRot;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float ExplorePitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float BattlePitch;
+
 };

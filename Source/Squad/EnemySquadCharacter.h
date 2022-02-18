@@ -31,6 +31,11 @@ public:
 	void SetBelongToBattleTrigger(class ABattleTrigger* BattleTigger);
 	ABattleTrigger* GetBelongToBattleTrigger();
 
+	void Enemy_Shot(AActor* Target);
+
+	void SetUnderGrid(class AGrid* Grid);
+	class AGrid* GetUnderGrid();
+
 protected:
 
 	/*
@@ -46,6 +51,17 @@ protected:
 
 	class ABattleTrigger* BelongToBattleTrigger;
 
+	
+
+	class AGrid* UnderGrid;
 public:
 	void TestLog();
+
+	FTimerHandle WaitHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+	float WaitTime;
+
+	int32 ArrayNumbering;
+
+	
 };

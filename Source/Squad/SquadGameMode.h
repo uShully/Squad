@@ -29,6 +29,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG_Game")
 	TSubclassOf<UUserWidget> DecisionWidgetClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG_Game")
+	TSubclassOf<UUserWidget> VictoryWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG_Game")
+	TSubclassOf<UUserWidget> DefeatWidgetClass;
+
+
 
 	UPROPERTY()
 	UUserWidget* CurrentWidget;
@@ -37,6 +44,9 @@ protected:
 
 public:
 
+	TSubclassOf<UUserWidget> GetVictoryWidgetClass();
+	TSubclassOf<UUserWidget> GetDefeatWidgetClass();
+
 	void StartBattle();
 	void EndBattle();
 
@@ -44,6 +54,8 @@ public:
 
 	void ViewDecisionWidget();
 	void ViewBattleWidget();
+	void ViewVictoryWidget();
+	void ViewDefeatWidget();
 
 	TArray<AActor*> FieldCharaters;
 

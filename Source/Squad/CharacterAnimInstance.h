@@ -41,5 +41,10 @@ public:
 	void Aiming();
 	UAnimMontage* aimingMontage;
 
+	UFUNCTION()
+	void BeCover();
+	UAnimMontage* coverMontage;
+
+	void StopMontage();
 
 };

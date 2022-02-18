@@ -38,6 +38,19 @@ ASquadGameMode::ASquadGameMode()
 	{
 		DecisionWidgetClass = DecisionWidget.Class;
 	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> VictoryWidget(L"WidgetBlueprint'/Game/DevFile/VictoryWidgetBP.VictoryWidgetBP_C'");
+	if (VictoryWidget.Succeeded())
+	{
+		VictoryWidgetClass = VictoryWidget.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> DefeatWidget(L"WidgetBlueprint'/Game/DevFile/DefeatWidgetBP.DefeatWidgetBP_C'");
+	if (DefeatWidget.Succeeded())
+	{
+		DefeatWidgetClass = DefeatWidget.Class;
+	}
+
 }
 
 
@@ -57,6 +70,27 @@ void ASquadGameMode::ViewBattleWidget()
 {
 	ChangeMenuWidget(BattleStartWidgetClass);
 }
+
+void ASquadGameMode::ViewVictoryWidget()
+{
+	ChangeMenuWidget(VictoryWidgetClass);
+}
+
+void ASquadGameMode::ViewDefeatWidget()
+{
+	ChangeMenuWidget(DefeatWidgetClass);
+}
+
+TSubclassOf<UUserWidget> ASquadGameMode::GetVictoryWidgetClass()
+{
+	return VictoryWidgetClass;
+}
+
+TSubclassOf<UUserWidget> ASquadGameMode::GetDefeatWidgetClass()
+{
+	return DefeatWidgetClass;
+}
+
 
 void ASquadGameMode::StartBattle()
 {

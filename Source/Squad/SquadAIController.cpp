@@ -5,6 +5,11 @@
 #include "BattleTrigger.h"
 #include "Grid.h"
 #include "Engine/Engine.h"
+#include "BattleController.h"
+#include "SquadGameInstance.h"
+#include "PlayerSquadCharacter.h"
+#include "EnemySquadCharacter.h"
+#include "SquadCameraManager.h"
 
 ASquadAIController::ASquadAIController()
 {
@@ -46,13 +51,14 @@ void ASquadAIController::PlayerCharater_Move()
 
 	if(Camera->ControlValue_PlayerCharacterMovement)
 	{
-		float a = (float)PlayerChar->numbering;
+		float a = PlayerChar->numbering;
 		FVector Loc = (Camera->BoxColiision->GetComponentLocation());
 		FVector Loc2 = FVector(180 * a, 0.f, 0.f);
 
 		FVector FinalLocation = Loc + Loc2;
 
 		MoveToLocation(FinalLocation);
+		//UE_LOG(LogClass, Log, TEXT(" Loc : %s , numbering : %d"), *FinalLocation.ToString(), PlayerChar->numbering);
 	}	
 }
 
@@ -86,22 +92,16 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 			tempGrid->SetGridInfo_Material();
 			BehindGrid->GridInfo.GOTO = EGridOntheObject::Player;
 			BehindGrid->SetGridInfo_Material();
+			PlayerChar->SetUnderGrid(BehindGrid);
 
 			MoveToLocation(SpreadLoc);
 		}
 	}
-
-	
-
-	
-
-	UE_LOG(LogClass, Log, L" Move Spread");
 }
 
 void ASquadAIController::EnemyCharacter_ActiveAI()
-{
-	
-
+{	
+	EnemyCharacter_ShotAI();
 }
 
 void ASquadAIController::EnemyCharacter_BasicAIMove()
@@ -120,7 +120,33 @@ void ASquadAIController::EnemyCharacter_BasicAIMove()
 	}
 }
 
+void ASquadAIController::EnemyChararacter_SetFrindlyCharacterList(TArray<AActor*> List)
+{
+	
+
+	if (FrindlyCharacterList.Num() > 0)
+		FrindlyCharacterList.Empty();
+
+	FrindlyCharacterList = List;
+}
+
 void ASquadAIController::EnemyCharacter_ShotAI()
 {
-	//EnemyChar->GetBelongToBattleTrigger();
+	APlayerSquadCharacter* tempChar;
+	
+	if(FrindlyCharacterList.Num() > 0)
+	{
+	tempChar = Cast<APlayerSquadCharacter>(FrindlyCharacterList[0]);
+
+	/*
+	for (int32 i = 1; i < FrindlyCharacterList.Num(); i++)
+	{
+		if (Cast<APlayerSquadCharacter>(tempChar)->LifePoint > FrindlyCharacterList[i]->LifePoint)
+		{
+			tempChar = FrindlyCharacterList[i];
+		}
+	}
+	*/
+	EnemyChar->Enemy_Shot(tempChar);
+	}
 }

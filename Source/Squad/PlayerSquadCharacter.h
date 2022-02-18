@@ -30,6 +30,10 @@ public:
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	void PlayerDeath(class UCharacterAnimInstance* CharAnimInst);
+
+	void SetCover();
+
 	void SetStay();
 
 	void SetCharacterEnd();
@@ -43,6 +47,26 @@ public:
 
 	void SetUnderGrid(class AGrid* Grid);
 	class AGrid* GetUnderGrid();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Numbering")
+	int32 ArrayNumbering;
+	
+	int32 GetBattleLineNumber();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+	int32 BattleLineNumber;
+
+	// 버프 시스템 초기
+
+	void Buff_System();
+	void Buff_Cover(bool OnOff);
+
+	bool IsActiveBuffCover = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+	float CharacterDefenceArmor = 0.f;
+
+	void StopMontage();
 
 protected:
 
@@ -60,4 +84,9 @@ protected:
 	
 	USoundBase* Selected_Sound;
 	class AGrid* UnderGrid;
+
+	
+
+
+
 };

@@ -296,7 +296,7 @@ void ASquadController::SetTargetCharacter()
 {
 
 	GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, HitTarget);
-	if (HitTarget.bBlockingHit == true)
+	if (HitTarget.bBlockingHit == true && Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->WhosTurn == false)
 	{
 		if (HitTarget.Actor == Cast<ASquadCharacter>(HitTarget.Actor)) 
 		{
@@ -305,7 +305,7 @@ void ASquadController::SetTargetCharacter()
 			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns != nullptr && Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true) // ��Ʋ��Ʈ�ѷ� ����� - ���� ���� ��
 			{
 				
-				if(HitTarget.Actor == Cast<AEnemySquadCharacter>(HitTarget.Actor))
+				if(HitTarget.Actor == Cast<AEnemySquadCharacter>(HitTarget.Actor) && Cast<AEnemySquadCharacter>(HitTarget.Actor)->StateEnum != EStateEnum::SE_Death)
 				{					
 					gameIns->TargetCharacter = nullptr;
 					gameIns->TargetCharacter = HitTarget.GetActor();
@@ -319,13 +319,13 @@ void ASquadController::SetTargetCharacter()
 						Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->Debug_Shot(Cast<ASquadCharacter>(HitTarget.Actor));
 						
 						
-						Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetCharacterEnd();
+						//Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetCharacterEnd();
 
 						
 						gameIns->BCIns->EndTurnSystem();
 					}										
 				}				
-				if (HitTarget.Actor == Cast<APlayerSquadCharacter>(HitTarget.Actor)) 
+				if (HitTarget.Actor == Cast<APlayerSquadCharacter>(HitTarget.Actor) && Cast<APlayerSquadCharacter>(HitTarget.Actor)->StateEnum != EStateEnum::SE_Death)
 				{
 					
 					if (gameIns->SelectedCharacter != nullptr && Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->StateEnum != EStateEnum::SE_Stay)

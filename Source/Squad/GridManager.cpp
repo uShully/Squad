@@ -66,7 +66,7 @@ void AGridManager::InitGrid()
 		for (int j = 0; j < Depth; j++)
 		{
 			// 그리드 생성
-			FVector Loc(this->GetActorLocation().X - i * Interval_X, this->GetActorLocation().Y + j * Interval_Y, this->GetActorLocation().Z);
+			FVector Loc(this->GetActorLocation().X - i * Interval_X, this->GetActorLocation().Y + j * Interval_Y, this->GetActorLocation().Z - 50.f);
 						
 			AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(GridToSpawn, Loc, this->GetActorRotation(), SpawnParams);
 			SpawnGrids.Add(SpawnedActorRef);
@@ -158,6 +158,7 @@ void AGridManager::Spawned_Enemy()
 				AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn, temp->GetActorLocation(), this->GetActorRotation(), SpawnParams);
 				parentBattleTrigger->EnemyList.Add(SpawndCharacterRef);
 				Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetBelongToBattleTrigger(parentBattleTrigger);
+				Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetUnderGrid(Cast<AGrid>(temp));
 				Cast<AGrid>(temp)->GridInfo.GOTO = EGridOntheObject::Enemy;
 				Cast<AGrid>(temp)->SetGridInfo_Material();
 				numberOfEnemyCharacter++;
@@ -180,6 +181,7 @@ void AGridManager::Spawned_Enemy()
 						AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn, parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid->GetActorLocation(), this->GetActorRotation(), SpawnParams);
 						parentBattleTrigger->EnemyList.Add(SpawndCharacterRef);
 						Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetBelongToBattleTrigger(parentBattleTrigger);
+						Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetUnderGrid(Cast<AGrid>(CastGrid));
 						CastGrid->GridInfo.GOTO = EGridOntheObject::Enemy;
 						CastGrid->SetGridInfo_Material();
 						numberOfEnemyCharacter++;
@@ -206,34 +208,40 @@ void AGridManager::Spawned_Obstacle(AActor* Grid, EEventBoxState Pattern)
 			{ 
 				if(Obstacle_XPosCount % 2 == 0 && (DCGrid->YPos == 0 || DCGrid->YPos == 1))
 				{
-					if (FMath::RandRange(0, 100) < 80.0f &&  !(numberOfObstacle == MaxnumberOfObstacle))
+					if (FMath::RandRange(0, 100) < 50.0f + CorrentionSpawnObstacle && !(numberOfObstacle == MaxnumberOfObstacle))
 					{
-						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation(), this->GetActorRotation(), SpawnParams);
+						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation() + FVector(0.f, 0.f, 40.f), this->GetActorRotation(), SpawnParams);
 						SpawnObtacle.Add(SpawnedObstacleRef);
 						Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->XPos;
 						Cast<AObstacle>(SpawnedObstacleRef)->YPos = Cast<AGrid>(Grid)->YPos;
 						DCGrid->GridInfo.GOTO = EGridOntheObject::Obstacle;
 						DCGrid->SetGridInfo_Material();
 
+						CorrentionSpawnObstacle = 0.f;
 						numberOfObstacle++;
-						Obstacle_XPosCount++;						
+						Obstacle_XPosCount++;
 					}
+					else
+						CorrentionSpawnObstacle = 50.f;
 
 				}
 				else if(Obstacle_XPosCount % 2 == 1 && (DCGrid->YPos == 3 || DCGrid->YPos == 4))
 				{
-					if (FMath::RandRange(0, 100) < 80.0f &&  !(numberOfObstacle == MaxnumberOfObstacle))
+					if (FMath::RandRange(0, 100) < 50.0f + CorrentionSpawnObstacle &&  !(numberOfObstacle == MaxnumberOfObstacle))
 					{
-						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation(), this->GetActorRotation(), SpawnParams);
+						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation() + FVector(0.f, 0.f, 40.f), this->GetActorRotation(), SpawnParams);
 						SpawnObtacle.Add(SpawnedObstacleRef);
 						Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->XPos;
 						Cast<AObstacle>(SpawnedObstacleRef)->YPos = Cast<AGrid>(Grid)->YPos;
 						DCGrid->GridInfo.GOTO = EGridOntheObject::Obstacle;
 						DCGrid->SetGridInfo_Material();
 
+						CorrentionSpawnObstacle = 0.f;
 						numberOfObstacle++;
-						Obstacle_XPosCount++;					
+						Obstacle_XPosCount++;				
 					}
+					else
+						CorrentionSpawnObstacle = 50.f;
 				}
 			}
 		}
@@ -242,26 +250,52 @@ void AGridManager::Spawned_Obstacle(AActor* Grid, EEventBoxState Pattern)
 	{
 		if (DCGrid->XPos != 14 && DCGrid->YPos != 2)
 		{
-			if (DCGrid->XPos == Obstacle_XPosCount)
+			if (DCGrid->XPos == Obstacle_XPosCount_Enemy)
 			{
-				if (FMath::RandRange(0, 100) < 50.0f && !(numberOfObstacle == MaxnumberOfObstacle))
+				
+				if (Obstacle_XPosCount_Enemy % 2 == 0 && (DCGrid->YPos == 0 || DCGrid->YPos == 1))
 				{
-					AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation(), this->GetActorRotation(), SpawnParams);
-					SpawnObtacle.Add(SpawnedObstacleRef);
-					Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->XPos;
-					Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->YPos;
 
-					DCGrid->GridInfo.GOTO = EGridOntheObject::Obstacle;
-					DCGrid->SetGridInfo_Material();
-					numberOfObstacle++;
-					Obstacle_XPosCount++;
+					if (FMath::RandRange(0, 100) < 50.0f + CorrentionSpawnObstacle && !(numberOfObstacle == MaxnumberOfObstacle))
+					{
+
+						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation() + FVector(0.f, 0.f, 40.f), this->GetActorRotation(), SpawnParams);
+						SpawnObtacle.Add(SpawnedObstacleRef);
+						Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->XPos;
+						Cast<AObstacle>(SpawnedObstacleRef)->YPos = Cast<AGrid>(Grid)->YPos;
+						DCGrid->GridInfo.GOTO = EGridOntheObject::Obstacle;
+						DCGrid->SetGridInfo_Material();
+
+						CorrentionSpawnObstacle = 0.f;
+						numberOfObstacle++;
+						Obstacle_XPosCount_Enemy++;
+					}
+					else
+						CorrentionSpawnObstacle = 50.f;
+
+				}
+				else if (Obstacle_XPosCount_Enemy % 2 == 1 && (DCGrid->YPos == 3 || DCGrid->YPos == 4))
+				{
+
+					if (FMath::RandRange(0, 100) < 50.0f + CorrentionSpawnObstacle && !(numberOfObstacle == MaxnumberOfObstacle))
+					{						
+						AActor* SpawnedObstacleRef = GetWorld()->SpawnActor<AActor>(ObstacleToSpawn, Grid->GetActorLocation() + FVector(0.f, 0.f, 40.f), this->GetActorRotation(), SpawnParams);
+						SpawnObtacle.Add(SpawnedObstacleRef);
+						Cast<AObstacle>(SpawnedObstacleRef)->XPos = Cast<AGrid>(Grid)->XPos;
+						Cast<AObstacle>(SpawnedObstacleRef)->YPos = Cast<AGrid>(Grid)->YPos;
+						DCGrid->GridInfo.GOTO = EGridOntheObject::Obstacle;
+						DCGrid->SetGridInfo_Material();
+
+						CorrentionSpawnObstacle = 0.f;
+						numberOfObstacle++;
+						Obstacle_XPosCount_Enemy++;
+					}
+					else
+						CorrentionSpawnObstacle = 50.f;
 				}
 			}
 		}
 	}
-
-
-	
 }
  
 void AGridManager::Spawned_ObstacleCheck() // 아군 진영만

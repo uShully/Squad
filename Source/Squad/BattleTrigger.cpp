@@ -8,6 +8,7 @@
 #include "SquadAIController.h"
 #include "GridManager.h"
 #include "Grid.h"
+#include "EventSpot.h"
 #include "SquadCharacter.h"
 #include "EnemySquadCharacter.h"
 #include "Engine/Engine.h"
@@ -48,34 +49,58 @@ void ABattleTrigger::BeginPlay()
 
 void ABattleTrigger::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	/*
 		if (OtherActor == Cast<APlayerSquadCharacter>(OtherActor))
-	{
-		if(!OverlapSwitch){
-		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Yellow, "Player Overlap");
+		{
+			if(!OverlapSwitch){
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Yellow, "Player Overlap");
 	
-			auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-			gameMode->BTIns = this;
-			gameMode->ViewDecisionWidget();
+				auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
+				gameMode->BTIns = this;
+				gameMode->ViewDecisionWidget();
 
-			auto SCMIns =Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
-			SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
+				auto SCMIns =Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
+				SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
 
-			for(int32 i = 0 ; i < SCMIns->FriendlyCharList.Num(); i++)
-			{
-				auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
-				Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation());
-				Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
-				Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
-				Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
+				for(int32 i = 0 ; i < SCMIns->FriendlyCharList.Num(); i++)
+				{
+					auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
+					Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation());
+					Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
+					Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
+					Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
 			
-				//BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
-			}
-			if (pGridManager != nullptr)
-				pGridManager->InitGrid();
+					BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
+				}
+				if (pGridManager != nullptr)
+					pGridManager->InitGrid();
 
-			OverlapSwitch = true;
+				OverlapSwitch = true;
 		}
 	}
+	*/
+}
+
+void ABattleTrigger::StartBattleEvent()
+{
+		auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
+		gameMode->BTIns = this;
+		gameMode->ViewDecisionWidget();
+		auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
+		SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
+		
+		for (int32 i = 0; i < SCMIns->FriendlyCharList.Num(); i++)
+		{
+			auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
+			Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation());
+			Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
+			Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
+			Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
+			BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
+		}
+
+		if (pGridManager != nullptr)
+			pGridManager->InitGrid();
 }
 
 void ABattleTrigger::InitBattleSetting()
@@ -98,7 +123,9 @@ void ABattleTrigger::InitBattleBox()
 	BoxColiision->SetBoxExtent(FVector(450.0f * numberOfBox,900.f , 600.f));
 
 	FActorSpawnParameters SpawnParams;
-
+	// 시작시 저장하는 정보 
+	// 1. EventBox 정보 :: SpawnBox
+	// 2. 
 	for (int i = 0; i < numberOfBox; i++)
 	{
 		FVector Loc(this->GetActorLocation().X - i * 900.f, this->GetActorLocation().Y, this->GetActorLocation().Z);
@@ -131,6 +158,18 @@ void ABattleTrigger::InitBattleBox()
 		
 	}
 
+	// Spawnd event spot
+
+	SpawnedEventSpot();
+}
+
+void ABattleTrigger::SpawnedEventSpot()
+{
+	FActorSpawnParameters SpawnParams;
+
+	FVector spotLoc = Coordinate[2].MultiArray[2].pGrid->GetActorLocation() + FVector(0.f,0.f,0.f);
+	AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(EventSpotToSpawn, spotLoc, this->GetActorRotation(), SpawnParams);
+	Cast<AEventSpot>(SpawnedActorRef)->parentBattleTrigger = this;
 }
 
 void ABattleTrigger::DeleteBattleTrigger()
@@ -145,6 +184,17 @@ void ABattleTrigger::DeleteBattleTrigger()
 	Destroy();
 }
 
+void ABattleTrigger::DeleteEnemyCharacter()
+{
+	int32 tempListNum = EnemyList.Num();
+
+	for (int32 i = 0; i < tempListNum; i++)
+	{
+		auto Char = EnemyList.Pop();
+		Char->Destroy();
+		UE_LOG(LogClass, Log, TEXT(" List Num : %d"), EnemyList.Num());
+	}
+}
 /*
 void ABattleTrigger::SetEventBoxState(EEventBoxState EventBoxState)
 {
@@ -161,7 +211,7 @@ void ABattleTrigger::SetEventBoxState(EEventBoxState EventBoxState)
 	SpawndBoxCout++;
 }
 */
-void ABattleTrigger::Debug_Fuc()
+void ABattleTrigger::BattleTrigger_PlayerSpreadOut()
 {
 	auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
 	
@@ -176,10 +226,13 @@ FVector ABattleTrigger::GetNeturalAreaLocation()
 {
 	FVector tempGetValue = tempGrid->GetActorLocation();
 	
-	
-	FVector Alpha = Coordinate[0].MultiArray[0].pGrid->GetActorLocation();
-	// 인덱스번호 코드 변경해야함
-	FVector Tango = Coordinate[14].MultiArray[4].pGrid->GetActorLocation();
+	FVector PlayerAreaCenter = Coordinate[2].MultiArray[2].pGrid->GetActorLocation();
+	FVector NeturalAreaCenter = Coordinate[7].MultiArray[2].pGrid->GetActorLocation();
+
+	FVector CameraLoc = FVector((PlayerAreaCenter.X + NeturalAreaCenter.X) / 2, PlayerAreaCenter.Y, PlayerAreaCenter.Z);
+
+	FVector Alpha = Coordinate[0].MultiArray[1].pGrid->GetActorLocation();
+	FVector Tango = Coordinate[14].MultiArray[1].pGrid->GetActorLocation();
 
 	FVector Loc = (Alpha + Tango) / 2;
 
