@@ -57,14 +57,14 @@ void ASquadAIController::PlayerCharater_Move()
 
 		FVector FinalLocation = Loc + Loc2;
 
-		MoveToLocation(FinalLocation);
+		MoveToLocation(FinalLocation , (-1.f), false);
 		//UE_LOG(LogClass, Log, TEXT(" Loc : %s , numbering : %d"), *FinalLocation.ToString(), PlayerChar->numbering);
 	}	
 }
 
 void ASquadAIController::PlayerCharater_MoveLoc(FVector Loc)
 {
-	MoveToLocation(Loc);
+	MoveToLocation(Loc , (-1.f), false);
 }
 
 void ASquadAIController::PlayerCharacter_SpreadOut()
@@ -94,7 +94,7 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 			BehindGrid->SetGridInfo_Material();
 			PlayerChar->SetUnderGrid(BehindGrid);
 
-			MoveToLocation(SpreadLoc);
+			MoveToLocation(SpreadLoc, (-1.f), false);
 		}
 	}
 }

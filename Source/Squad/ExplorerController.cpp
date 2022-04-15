@@ -43,7 +43,7 @@ void AExplorerController::InitPlayerCharacter()
 
 	for (int32 i = 0; i < PlayerCharacters.Num(); i++)
 	{
-		gameIns->CharSlot[i].CharacterInfo = Cast<APlayerSquadCharacter>(PlayerCharacters[i]);
+		//gameIns->CharSlot[i].CharacterInfo = Cast<APlayerSquadCharacter>(PlayerCharacters[i]);
 
 		UE_LOG(LogClass, Log, L" Get in the Slot");
 	}

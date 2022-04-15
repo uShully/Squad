@@ -28,7 +28,7 @@ public:
 
 	
 	void SortFrindlyCharList();
-
+	//virtual void PostInitializeComponents() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// 2.14
 	void PlusTargetArmLeght();

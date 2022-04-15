@@ -34,7 +34,19 @@ AEnemySquadCharacter::AEnemySquadCharacter()
 	{
 		Death_Sound = DeathSound.Object;
 	}
-	
+	/*
+	FName WeaponSocket(TEXT("hand_rSocket"));
+	if (GetMesh()->DoesSocketExist(WeaponSocket))
+	{
+		Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WEAPON"));
+		static ConstructorHelpers::FObjectFinder<USkeletalMesh> Assault_Rifle(L"SkeletalMesh'/Game/MilitaryWeapDark/Weapons/Assault_Rifle_B.Assault_Rifle_B'");
+		if (Assault_Rifle.Succeeded())
+		{
+			Weapon->SetSkeletalMesh(Assault_Rifle.Object);
+		}
+		Weapon->SetupAttachment(GetMesh(), WeaponSocket);
+	}
+	*/
 
 }
 
@@ -48,7 +60,7 @@ float AEnemySquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& 
 		if (CharAnimInst != nullptr)
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, GetHit_Sound, GetActorLocation(), 1.0f);
-			CharAnimInst->Hit();
+			CharAnimInst->Enemy_Hit();
 		}
 	}
 	else
@@ -72,10 +84,10 @@ void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 	Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
 
 	UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
-	CharAnimInst->Death();
+	CharAnimInst->Enemy_Death();
 
 	
-
+	LifeBar->SetHiddenInGame(true);
 	
 
 	if (Fun_Death.IsBound())
@@ -110,7 +122,7 @@ void AEnemySquadCharacter::Enemy_Shot(AActor* Target)
 	
 	
 
-		CharAnim->BeShot();
+		CharAnim->Enemy_BeShot();
 		GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
 		UGameplayStatics::PlaySoundAtLocation(this, Fire_Sound, GetActorLocation(), 0.2f);
 		UGameplayStatics::ApplyDamage(Target, Damage, GetWorld()->GetFirstPlayerController(), this, nullptr);

@@ -11,6 +11,7 @@
 #include "Grid.h"
 #include "Engine/World.h"
 
+
 // Sets default values
 ABattleController::ABattleController()
 {
@@ -18,7 +19,7 @@ ABattleController::ABattleController()
 	PrimaryActorTick.bCanEverTick = false;
 
 	
-	
+	BGMComp = CreateDefaultSubobject<UAudioComponent>(TEXT("BGM"));
 
 }
 
@@ -30,8 +31,10 @@ void ABattleController::BeginPlay()
 	
 	auto gameIns = GetWorld()->GetGameInstance();
 	Cast<USquadGameInstance>(gameIns)->BCIns = this;
-	
-	
+
+
+	BGMComp->SetSound(ExplorerSound);
+	BGMComp->Play(3.f);
 }
 
 // Called every frame
@@ -161,6 +164,9 @@ void ABattleController::StartTurnSystem_init() //
 
 	// 
 
+	BGMComp->SetSound(BattleSound);
+	BGMComp->FadeIn(3.f);
+
 	StartTurnSystem();
 }
 
@@ -228,7 +234,8 @@ void ABattleController::SetEnd()
 void ABattleController::EndTurnSystem()
 {
 	BeCheck();
-
+	UE_LOG(LogClass, Log, TEXT(" StartArray : %d "), PlayerStartBattleArray.Num());
+	UE_LOG(LogClass, Log, TEXT(" EndArray : %d "), PlayerEndBattleArray.Num());
 	if (!WhosTurn && IsBattleStart == true)
 	{
 		 // 적이 모두 죽었는지 안죽었는지 판별
@@ -396,11 +403,12 @@ void ABattleController::WorkEnemyAI()
 		{
 			Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_End;
 		}
-		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
+
+		for (int32 i = 0; i < PlayerStartBattleArray.Num(); i++)
 		{
-			Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum = EStateEnum::SE_Stay;
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->Buff_System();
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->StopMontage();
+			Cast<ASquadCharacter>(PlayerStartBattleArray[i])->StateEnum = EStateEnum::SE_Stay;
+			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->Buff_System();
+			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->StopMontage();
 		}
 
 		WhosTurn = false;
@@ -455,7 +463,7 @@ void ABattleController::ResetPlayerEndBattleArray()
 {
 	if (PlayerEndBattleArray.Num() == FriendlyCharacters.Num() - PlayerDeathCount)
 	{
-		PlayerStartBattleArray.Append(PlayerEndBattleArray); // 행동 끝낸 적 캐릭터들을 다시 행동력을 채우고
+		PlayerStartBattleArray.Append(PlayerEndBattleArray); // 행동 끝낸 아군 캐릭터들을 다시 행동력을 채우고
 		//if(PlayerEndBattleArray.Num() != 0)
 		PlayerEndBattleArray.Empty();              // EndArray를 비운다
 
@@ -490,6 +498,10 @@ void ABattleController::ResultBattle()
 
 
 	//Cast<ASquadGameMode>(gameMode)->EndBattle();
+
+	BGMComp->FadeOut(3.f , 0.f);
+	BGMComp->SetSound(ExplorerSound);
+	BGMComp->FadeIn(2.f);
 
 	// 
 }

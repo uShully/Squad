@@ -69,6 +69,9 @@ void AEventSpot::StartBattleEvent()
 	{
 		ChangeMenuWidget(CrossRoadWidgetClass);
 		// 갈림길 이벤트 창
+		auto gameIns = GetWorld()->GetGameInstance();
+		Cast<USquadGameInstance>(gameIns)->SCMIns->Control_PlayerCharacterMovement(true);
+		Cast<USquadGameInstance>(gameIns)->SCMIns->Control_CameraMovement();
 	}
 }
 

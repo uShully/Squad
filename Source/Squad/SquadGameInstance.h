@@ -10,6 +10,7 @@
 #include "PlayerSquadCharacter.h"
 #include "EnemySquadCharacter.h"
 #include "SquadCameraManager.h"
+#include "CommonStruct.h"
 #include "SquadGameInstance.generated.h"
 
 USTRUCT(BlueprintType)
@@ -34,11 +35,18 @@ struct FPlayerCharacterSlot
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		APlayerSquadCharacter* CharacterInfo;
+	//APlayerSquadCharacter* CharacterInfo;
+	TArray<FCharacterDataStruct> CharacterDataArry;
+	int32 SlotNum;
 
+	int32 CalSlotNum()
+	{
+		SlotNum = CharacterDataArry.Num();
 
+		return SlotNum;
+	}
 
+	int32 MaxSlotNum = 3;
 };
 /**
  * 
@@ -55,12 +63,16 @@ public:
 
 	//virtual void BeginPlay() override;
 
-	// 삭제 예정 //
-	typedef struct PlayerCharSlot
-	{
-		APlayerSquadCharacter* CharacterInfo;
-		int32 SlotNumber;
-	} FSlot;
+	void IncludeCharacterData(FCharacterDataStruct CharacterData);
+	void ExcludeCharacterData();
+	int32 GetCharacterDataNum();
+
+	
+
+	FPlayerCharacterSlot CharSlot;
+
+//	UPROPERTY()
+	//TArray<FPlayerCharacterSlot> CharSlot;
 
 	///////////////
 
@@ -71,10 +83,15 @@ public:
 	AActor* TargetCharacter;
 	AActor* SelectedCharacter;
 
-	UPROPERTY()
-	TArray<FPlayerCharacterSlot> CharSlot;
+	UFUNCTION()
+	void InitInstance();
+
+
 	
 	FSquadCharacterData* GetSquadCharacterData(int32 Level);
+
+
+	
 
 private:
 	UPROPERTY()

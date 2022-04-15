@@ -51,7 +51,7 @@ void ASquadCameraManager::BeginPlay()
 	auto gameIns = GetWorld()->GetGameInstance();
 	Cast<USquadGameInstance>(gameIns)->SCMIns = this;
 
-	GetFriendlyChar();
+	//GetFriendlyChar();
 	
 }
 
@@ -68,7 +68,7 @@ void ASquadCameraManager::GetFriendlyChar()
 	
 
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), FriendlyCharList);
-	UE_LOG(LogClass, Log, TEXT(" Get Frind num : %d"), FriendlyCharList.Num());
+	//UE_LOG(LogClass, Log, TEXT(" Get Frind num : %d"), FriendlyCharList.Num());
 	SortFrindlyCharList();
 }
 
@@ -196,13 +196,13 @@ void ASquadCameraManager::Control_SetBattleCameraLocation(float DeltaTime)
 		else if (IsBattleToExplore == true)
 		{
 			FVector CurrentLocation = GetActorLocation();
-			FVector Interp = FMath::VInterpTo(CurrentLocation, ExplorerLocation, GetWorld()->GetDeltaSeconds(), 5.0f);
+			FVector Interp = FMath::VInterpTo(CurrentLocation, ExplorerLocation, GetWorld()->GetDeltaSeconds(), 3.0f);
 
 			SetActorLocation(Interp);
 
 
 
-			if (CurrentLocation.X > ExplorerLocation.X - 1.f)
+			if (CurrentLocation.X > ExplorerLocation.X - 50.f)
 			{
 				MoveSwitch = false;
 				IsBattleToExplore = false;

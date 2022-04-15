@@ -6,6 +6,7 @@
 #include "StatusBarWidget.h"
 #include "SquadController.h"
 #include "CharacterAnimInstance.h"
+#include "FloatingTextActor.h"
 #include "CursorHighlight.h"
 
 ASquadCharacter::ASquadCharacter()
@@ -55,6 +56,12 @@ ASquadCharacter::ASquadCharacter()
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 	*/
 
+	static ConstructorHelpers::FObjectFinder<UBlueprint> FloatingText(TEXT("Blueprint'/Game/FloatingTextActorBP.FloatingTextActorBP'"));
+	if (FloatingText.Object)
+	{
+		FloatingTextActorBP = (UClass*)FloatingText.Object->GeneratedClass;
+	}
+
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MS(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
 	if (MS.Succeeded())
 	{
@@ -73,7 +80,7 @@ ASquadCharacter::ASquadCharacter()
 		}
 		Weapon->SetupAttachment(GetMesh(), WeaponSocket);
 	}
-
+	
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> Fire(TEXT("ParticleSystem'/Game/MilitaryWeapDark/FX/P_AssaultRifle_MuzzleFlash.P_AssaultRifle_MuzzleFlash'"));
 	if (Fire.Succeeded())
 	{
@@ -145,8 +152,23 @@ float ASquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damag
 
 	LifePoint -= ActualDamage;
 
+	TakenDamage = Damage;
+	SpawnDamageUI();
 
 	return ActualDamage;
+}
+
+void ASquadCharacter::SpawnDamageUI()
+{
+	UWorld* world = GetWorld();
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	FRotator rotator = GetActorRotation();
+	FVector SpawnLocation = GetActorLocation();
+
+	AFloatingTextActor* ActorRef = world->SpawnActor<AFloatingTextActor>(FloatingTextActorBP , SpawnLocation, rotator, SpawnParams );
+	
 }
 
 float ASquadCharacter::GetLifePointPercent() const

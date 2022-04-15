@@ -1,6 +1,8 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SquadGameMode.h"
+#include "SGTestGameMode.h"
+#include "UObject/ConstructorHelpers.h"
+#include "SquadGameInstance.h"
 #include "SquadCameraManager.h"
 #include "SquadController.h"
 #include "DebugWidget.h"
@@ -8,24 +10,19 @@
 #include "BattleTrigger.h"
 #include "PlayerSquadCharacter.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
-#include "UObject/ConstructorHelpers.h"
-#include "SquadGameInstance.h"
 
-ASquadGameMode::ASquadGameMode()
+
+
+ASGTestGameMode::ASGTestGameMode()
 {
-	// set default pawn class to our Blueprinted character
-
-	FString path = L"";
-	path = L"Blueprint'/Game/DevFile/SquadCameraManager.SquadCameraManager_C'";
-
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(*path);
-	if (PlayerPawnBPClass.Succeeded())
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/DevFile/SquadCameraManager.SquadCameraManager_C'"));
+	if (PlayerPawnBPClass.Class)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 	else
 	{
-		DefaultPawnClass = NULL;
+		DefaultPawnClass = nullptr;
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> BattleStartWidget(L"WidgetBlueprint'/Game/DevFile/Widget/BattleWidget.BattleWidget_C'");
@@ -52,36 +49,25 @@ ASquadGameMode::ASquadGameMode()
 		DefeatWidgetClass = DefeatWidget.Class;
 	}
 
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_0_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_1_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_2_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-
-	//	static ConstructorHelpers::FObjectFinder<
-
-	//Class_0_Mesh_Load();
-	//Class_1_Mesh_Load();
-	//Class_2_Mesh_Load();
 }
 
-
-// 
-void ASquadGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+void ASGTestGameMode::InitGame(const FString& MapName, const FString& option, FString& ErrorMessage)
 {
-	Super::InitGame(MapName, Options, ErrorMessage);
+	Super::InitGame(MapName, option, ErrorMessage);
 
 	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->InitInstance();
 }
 
-void ASquadGameMode::PreInitializeComponents()
+void ASGTestGameMode::PreInitializeComponents()
 {
 	Super::PreInitializeComponents();
 
-	
 
-	GetFriendlyChar();
+
+	//GetFriendlyChar();
 }
 
-void ASquadGameMode::GetFriendlyChar()
+void ASGTestGameMode::GetFriendlyChar()
 {
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), PreFriendlyCharList);
 	UGameplayStatics::GetAllActorsOfClass(this, ASquadCameraManager::StaticClass(), tempSCMList);
@@ -94,18 +80,18 @@ void ASquadGameMode::GetFriendlyChar()
 	Cast<ASquadCameraManager>(tempSCMList[0])->FriendlyCharList.Append(PreFriendlyCharList);
 }
 
-void ASquadGameMode::SetTeamPosition()
+void ASGTestGameMode::SetTeamPosition()
 {
 	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharacterDataNum();
-	
-	for(int32 i = 0 ; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->CharSlot.MaxSlotNum - chaNum; i++)
+
+	for (int32 i = 0; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->CharSlot.MaxSlotNum - chaNum; i++)
 	{
 		AActor* tempChar = PreFriendlyCharList.Pop();
 		tempChar->Destroy();
 	}
 }
 
-void ASquadGameMode::SortFrindlyCharList()
+void ASGTestGameMode::SortFrindlyCharList()
 {
 	for (int32 i = 0; i < PreFriendlyCharList.Num(); i++)
 	{
@@ -128,7 +114,7 @@ void ASquadGameMode::SortFrindlyCharList()
 	}
 }
 
-void ASquadGameMode::SetCharacterState()
+void ASGTestGameMode::SetCharacterState()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
@@ -137,16 +123,16 @@ void ASquadGameMode::SetCharacterState()
 		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->Damage = gameIns->CharSlot.CharacterDataArry[i].Damage;
 		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->LifePoint = gameIns->CharSlot.CharacterDataArry[i].LifePoint;
 		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum = gameIns->CharSlot.CharacterDataArry[i].ClassNumber;
-	
+
 		SetCharacterMesh(Cast<APlayerSquadCharacter>(PreFriendlyCharList[i]), Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum);
 	}
 
 
 }
 
-void ASquadGameMode::SetCharacterMesh(class APlayerSquadCharacter* Character, int32 classNumber)
+void ASGTestGameMode::SetCharacterMesh(class APlayerSquadCharacter* Character, int32 classNumber)
 {
-	
+
 	if (classNumber == 0)
 	{
 		UE_LOG(LogClass, Log, TEXT(" class number 0 "));
@@ -273,7 +259,7 @@ void ASquadGameMode::SetCharacterMesh(class APlayerSquadCharacter* Character, in
 		Character->SetContentMesh(Character->Decals, nullptr);
 		Character->SetContentMesh(Character->Radio, TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Radio4.SK_Military_Radio4'"));
 		Character->SetContentMesh(Character->Kneepad_R, TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Kneepad_L.SK_Military_Kneepad_L'"));
-		Character->SetContentMesh(Character->Kneepad_L,TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Vest_Belt.SK_Military_Vest_Belt'"));
+		Character->SetContentMesh(Character->Kneepad_L, TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Vest_Belt.SK_Military_Vest_Belt'"));
 		Character->SetContentMesh(Character->Holster, nullptr);
 		/*
 		Character->SetSkeletalMeshComp(SkeletalMeshArray[2]->Head,
@@ -306,98 +292,3 @@ void ASquadGameMode::SetCharacterMesh(class APlayerSquadCharacter* Character, in
 	}
 
 }
-
-void ASquadGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-
-
-
-}
-
-void ASquadGameMode::ViewDecisionWidget()
-{
-	ChangeMenuWidget(DecisionWidgetClass);
-}
-
-void ASquadGameMode::ViewBattleWidget()
-{
-	ChangeMenuWidget(BattleStartWidgetClass);
-}
-
-void ASquadGameMode::ViewVictoryWidget()
-{
-	ChangeMenuWidget(VictoryWidgetClass);
-}
-
-void ASquadGameMode::ViewDefeatWidget()
-{
-	ChangeMenuWidget(DefeatWidgetClass);
-}
-
-TSubclassOf<UUserWidget> ASquadGameMode::GetVictoryWidgetClass()
-{
-	return VictoryWidgetClass;
-}
-
-TSubclassOf<UUserWidget> ASquadGameMode::GetDefeatWidgetClass()
-{
-	return DefeatWidgetClass;
-}
-
-
-void ASquadGameMode::StartBattle()
-{
-	Cast<ABattleTrigger>(BTIns)->InitBattleSetting();
-	
-	BTIns = nullptr;
-	/*
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	gameIns->BCIns->InitBattleSetting();
-	*/
-}
-
-void ASquadGameMode::EndBattle()
-{
-	CurrentWidget->RemoveFromViewport();
-	CurrentWidget = nullptr;
-}
-
-void ASquadGameMode::ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass)
-{
-	if (CurrentWidget != nullptr)
-	{
-		CurrentWidget->RemoveFromViewport();
-		CurrentWidget = nullptr;
-	}
-
-	if (NewWidgetClass != nullptr)
-	{
-		CurrentWidget = CreateWidget(GetWorld(), NewWidgetClass);
-		if (CurrentWidget != nullptr)
-		{
-			CurrentWidget->AddToViewport();
-		}
-	}	
-}
-
-void ASquadGameMode::ChangeTargetName(FString Name)
-{
-	Cast<UBattleWidget>(CurrentWidget)->ChangeTargetName(Name);
-}
-
-void ASquadGameMode::ChangeCurrentCharName(FString Name)
-{
-	Cast<UBattleWidget>(CurrentWidget)->ChangeCurrentCharName(Name);
-}
-
-void ASquadGameMode::ChangeWhosTurnName(bool Name)
-{
-	Cast<UBattleWidget>(CurrentWidget)->ChangeWhosTurnName(Name);
-}
-
-void ASquadGameMode::LoadCharacterMesh()
-{
-
-}
-

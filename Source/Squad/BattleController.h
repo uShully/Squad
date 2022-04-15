@@ -8,6 +8,8 @@
 #include "PlayerSquadCharacter.h"
 #include "EnemySquadCharacter.h"
 #include "BattleTrigger.h"
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 #include "BattleController.generated.h"
 
 
@@ -119,4 +121,18 @@ public:
 
 	FTimerHandle WaitHandle;
 	float WaitTime = 2.f;
+
+	public:
+
+		// Sound //
+
+		UPROPERTY(EditAnywhere, Category = "GameSetting")
+		class USoundBase* BattleSound;
+
+		UPROPERTY(EditAnywhere, Category = "GameSetting")
+		class USoundBase* ExplorerSound;
+
+		UPROPERTY(EditAnywhere)
+		class UAudioComponent* BGMComp;
+
 };

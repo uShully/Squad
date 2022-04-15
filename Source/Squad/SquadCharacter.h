@@ -55,11 +55,18 @@ protected:
 	UAnimInstance* animInstance;
 	virtual void PostInitializeComponents() override;
 	   	 
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AFloatingTextActor> FloatingTextActorBP;
+
 public:
 
 	ASquadCharacter();
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	void SpawnDamageUI();
+	float TakenDamage;
 
 	UPROPERTY(EditAnywhere , Category = "Status")
 	float LifePoint;
