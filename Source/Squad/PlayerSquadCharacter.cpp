@@ -434,7 +434,7 @@ void APlayerSquadCharacter::BeShot()
 	//SetCharacterEnd();
 
 	if (UnderGrid != nullptr)
-		UnderGrid->SetGridInfo_Material_temp2();
+		UnderGrid->SetGridInfo_Material_Black();
 
 	//SetIsCharacterUseAttackTotrue();
 
@@ -508,7 +508,7 @@ void APlayerSquadCharacter::BeReload()
 		//SetCharacterEnd();
 
 		if (UnderGrid != nullptr)
-			UnderGrid->SetGridInfo_Material_temp2();
+			UnderGrid->SetGridInfo_Material_Black();
 	}
 	//gameIns->BCIns->EndTurnSystem();
 }
@@ -541,7 +541,7 @@ void APlayerSquadCharacter::BeReload_BattleOver()
 	//SetCharacterEnd();
 
 	if (UnderGrid != nullptr)
-		UnderGrid->SetGridInfo_Material_temp2();
+		UnderGrid->SetGridInfo_Material_Black();
 
 	//gameIns->BCIns->EndTurnSystem();
 }
@@ -587,7 +587,7 @@ void APlayerSquadCharacter::SetCover()
 
 			SetHighLight(false);
 			if (UnderGrid != nullptr)
-				UnderGrid->SetGridInfo_Material_temp2();
+				UnderGrid->SetGridInfo_Material_Black();
 
 			SetCharacterEnd();		
 		}
@@ -1090,7 +1090,7 @@ void APlayerSquadCharacter::SetTurnOnHighLightGrid()
 void APlayerSquadCharacter::SetTurnOffHighLightGrid()
 {
 	if (UnderGrid != nullptr)
-		UnderGrid->SetGridInfo_Material_temp2();
+		UnderGrid->SetGridInfo_Material_Black();
 }
 
 //////////// 스킬 /////////////////

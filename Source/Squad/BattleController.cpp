@@ -371,7 +371,7 @@ void ABattleController::EndTurnSystem()
 						{
 							AGrid* tempGrid = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetUnderGrid();
 							Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-							tempGrid->SetGridInfo_Material_temp3();
+							tempGrid->SetGridInfo_Material_Green();
 						}
 					}
 					EnemyEndBattleArray.Empty();                       // EndArray를 비운다
@@ -498,7 +498,7 @@ void ABattleController::WorkEnemyAI()
 
 		controller->EnemyCharacter_ActiveAI();
 		if(Enemy->GetUnderGrid() != nullptr)
-		Enemy->GetUnderGrid()->SetGridInfo_Material_temp2(); // 장판 검정색으로 변환
+		Enemy->GetUnderGrid()->SetGridInfo_Material_Black(); // 장판 검정색으로 변환
 		EnemyEndBattleArray.Push(Enemy);
 
 		// 전투를 실행시킨다
@@ -527,7 +527,7 @@ void ABattleController::WorkEnemyAI()
 		{
 			AGrid* tempGrid = Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetUnderGrid();
 			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-			tempGrid->SetGridInfo_Material_temp3();
+			tempGrid->SetGridInfo_Material_Green();
 		}
 
 		for (int32 i = 0; i < EnemyCharacters.Num(); i++)

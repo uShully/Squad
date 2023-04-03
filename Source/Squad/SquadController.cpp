@@ -576,7 +576,7 @@ void ASquadController::MoveCharacter()
 			LerpTimeline.PlayFromStart();
 
 			pGrid->GridInfo.GOTO = EGridOntheObject::Player;
-			pGrid->SetGridInfo_Material_temp2(); // 색변환 함수 임시
+			pGrid->SetGridInfo_Material_Black(); // 색변환 함수 임시
 			pSelectedChar->pGridOnCharacter = pGrid;
 
 
