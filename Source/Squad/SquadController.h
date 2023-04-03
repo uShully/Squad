@@ -36,6 +36,10 @@ public:
 	
 	virtual void SetupInputComponent() override;
 
+	UFUNCTION()
+	void RayHit();
+
+	bool IsGridSelected = false;
 
 private:
 
@@ -47,20 +51,64 @@ private:
 	void MoveCharacter();
 	void MoveToMouseCursor(const FVector Location);
 
+	class ASquadCharacter* pRayHitCharacter;
+	class ASquadCharacter* pRayHitEnemyCharacter;
+
+	class ASquadCharacter* pRayHitSelectedCharacter;
+
+	class ASquadCharacter* Controller_SelectedCharacter;
+
 public:
 
+	void SetpRayHitCharacter(ASquadCharacter* Char) { pRayHitCharacter = Char; };
+	void SetpRayHitSelectedCharacter(ASquadCharacter* Char) { pRayHitSelectedCharacter = Char; };
 	void SetHighLight(ACursorHighlight* Cursor);
-
-	void Debug_TurnSystem();
 	
+	// Key Bind 
+	void Debug_TurnSystem1();
+	void Debug_TurnSystem2();
+
+	FInputActionBinding testAB;
+
+	void SetKeyBindSkillButton1();
+	void SetKeyBindSkillButton2();
+	void SetKeyBindSkillButton3();
+	void SetKeyBindSkillButton4();
+	void SetKeyBindSkillButton5();
+
+	void SetkeyBindMousewheel();
+	void SetkeyBindMousewheelreverse();
+
+	void ControlTarget_ExplorerWheel();
+	void ControlTarget_ExplorerWheelReverse();
+	//
+
 	FHitResult HitTarget;
 
 	void SetTargetCharacter();
+	void ClearpRayHitCharacterValue();
+	void SetTargetCharacter_Explorer();
+
+	class APlayerSquadCharacter* Target_Explorer = nullptr;
+	class APlayerSquadCharacter* preTarget_Explorer = nullptr;
 
 	void CharacterMove();
 
-	void PlayerCharater_Move();
+	//void PlayerCharater_Move();
 
+	void EmptypRayHitCharacter(ASquadCharacter* CurrentChar);
+
+	bool CompareInputActionBindings(FInputActionBinding lhs, FInputActionBinding rhs);
+
+	void ClearSelectedCharacter_Explorer();
+
+	//UFUNCTION()
+	void SetSquadControllerInput(bool bIsStop);
+
+	void SetSelectedCharacterInfo();
+
+	UFUNCTION(BlueprintCallable)
+	void SetMenuInput(bool bIsStop);
 
 private:
 
@@ -92,4 +140,15 @@ private:
 	float YOffset;
 
 	bool testbool;
+
+
+	UPROPERTY()
+		int32 IsGamePlay = 0;
+
+	UFUNCTION()
+		int32 SwitchGamePlayValue();
+
+	class USoundBase* Selected_Sound;
+
+	
 };

@@ -21,7 +21,9 @@ class SQUAD_API UVictoryWidget : public UUserWidget
 
 	//////////////////////////
 	
-	UPROPERTY(meta = (BindWidget))
+public:
+
+	UPROPERTY(BlueprintReadOnly ,meta = (BindWidget))
 	class UButton* ResultButton;
 
 	////////////////////////

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -38,16 +38,18 @@ public:
 	void StartTurnSystem();
 	void StartTurnSystem_init();
 
-	// 2/12 Ãß°¡
+	// 2/12 ì¶”ê°€
 	TArray<AActor*> PlayerStartBattleArray;
-	TArray<AActor*> PlayerEndBattleArray; // ÀüÅõ°¡ ³¡³­ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ Áı¾î³Ö´Â´Ù
+	TArray<AActor*> PlayerEndBattleArray; // ì „íˆ¬ê°€ ëë‚œ í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ì§‘ì–´ë„£ëŠ”ë‹¤
 	TArray<AActor*> tempPlayerEndBattleArray;
 	TArray<AActor*> EnemyStartBattleArray;
-	TArray<AActor*> EnemyEndBattleArray; // ÀüÅõ°¡ ³¡³­ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ Áı¾î³Ö´Â´Ù
+	TArray<AActor*> EnemyEndBattleArray; // ì „íˆ¬ê°€ ëë‚œ í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ì§‘ì–´ë„£ëŠ”ë‹¤
 
-	// 2/16 Ãß°¡
+	// 2/16 ì¶”ê°€
 
 	void ControlCharacterCameraMovement(bool PlayerMovementSwitch);
+
+	bool SwitchCharacterMovement(bool PlayerMovementSwitch);
 
 	//
 
@@ -67,16 +69,17 @@ public:
 
 	void SetSelectedCharacter(ASquadCharacter* SelectedCharacter);
 	void ClearSelectedCharacter();
+	AActor* GetSelectedCharacter();
 
 	struct BattleSystemStat {
 		
 		int32 CharNumber;
 		int32 TurnNumber;
 
-		// HaveTurnCharacter¸¦ SelectedCharacter·Î º¯°æ
+		// HaveTurnCharacterë¥¼ SelectedCharacterë¡œ ë³€ê²½
 		AActor* SelectedCharacter;
 
-		void init() { CharNumber = 0; TurnNumber = 0; SelectedCharacter = nullptr; }
+		void init() { CharNumber = 0; TurnNumber = 0; }
 
 	};
 	
@@ -86,19 +89,31 @@ public:
 
 	void ResultBattle_temp();
 
+	void ChangeSelectedCharacter();
+
+	void SystemChangeSelectedCharacter();
+
+	void ControlChangeSelectedCharacter();
+
+	void Update_PlayerCharacterCooldown(APlayerSquadCharacter * playerCharacter);
+
+
+	void ReverseControlChangeSelectedCharacter();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	BattleSystemStat SystemState;
 
-	void WorkEnemyAI();
+
 	
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void WorkEnemyAI();
 	FString TargetName;
 
 	bool IsBattleStart = false;
@@ -115,7 +130,7 @@ public:
 	int32 PlayerDeathCount = 0;
 
 
-	bool WhosTurn = false; // false = ¾Æ±º true = Àû±º
+	bool WhosTurn = false; // false = ì•„êµ° true = ì êµ°
 
 
 
@@ -135,4 +150,7 @@ public:
 		UPROPERTY(EditAnywhere)
 		class UAudioComponent* BGMComp;
 
+		bool IsSkillTargeting = false;
+		void SetSkillTargeting(bool IsAttackSkill);
+		void SetDisableSkillTargeting(bool IsAttackSkill);
 };

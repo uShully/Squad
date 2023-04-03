@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+﻿// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -26,9 +26,84 @@ enum class EStateEnum : uint8
 {
 	SE_Stay UMETA(DisplayName = "Stay"),
 	SE_Shot UMETA(DisplayName = "Shot"),
-	SE_Move UMETA(DisplayName = "Move"),
+	SE_Skill1 UMETA(DisplayName = "Skill1"),
+	SE_Skill2 UMETA(DisplayName = "Skill2"),
+	SE_Cover UMETA(DisplayName = "Cover"),
+	SE_Reload UMETA(DisplayName = "Reload"),
 	SE_End UMETA(DisplayName = "End"),
 	SE_Death UMETA(DisplayName = "Death")
+
+};
+
+USTRUCT(BlueprintType)
+struct FCCStatus
+{
+	GENERATED_BODY()
+
+public:
+
+	FCCStatus() : UseCharacter(nullptr) , TargetCharacter(nullptr)  ,IsCCActive(false), Skill_Count(0.f),
+		Skill_UsedCharacterAccurancyrateCorrectionValue(0.f),
+		Skill_UsedCharacterCriticalCorrectionValue(0.f),
+		Skill_TargetAvoidanceRateCorrectionValue(0.f),
+		Skill_TargetAccurancyRateCorretionValue(0.f),
+		Skill_Stun(false) {}
+	
+private:
+	class ASquadCharacter* UseCharacter;
+	class ASquadCharacter* TargetCharacter;
+public:
+	ASquadCharacter* GetUseCharacterData() { return UseCharacter; }
+	ASquadCharacter* GetTargetCharacterData() { return TargetCharacter; }
+	
+	void SetUseCharacterData(ASquadCharacter* UseCharacterData) { UseCharacter = UseCharacterData; }
+	void SetTargetCharacterData(ASquadCharacter* TargetCharacterData) { TargetCharacter = TargetCharacterData; }
+
+
+	UPROPERTY()
+		bool IsCCActive;
+
+	UPROPERTY()
+		int32 Skill_Count;
+	//1
+	UPROPERTY()
+		int32 Skill_UsedCharacterAccurancyrateCorrectionValue;
+
+	//2
+	UPROPERTY()
+		int32 Skill_UsedCharacterCriticalCorrectionValue;
+
+	UPROPERTY()
+		int32 Skill_UsedCharacterEvasionCorrectionValue;
+
+	UPROPERTY()
+		int32 Skill_UsedCharacterDefensiveCorrectionValue;
+
+	//3
+	UPROPERTY()
+		int32 Skill_TargetAvoidanceRateCorrectionValue;
+
+	//4
+	UPROPERTY()
+		int32 Skill_TargetAccurancyRateCorretionValue;
+
+	//5
+	UPROPERTY()
+		bool Skill_Stun;
+	
+public:
+		
+	void ClearStructData() {
+		UseCharacter = nullptr;
+		TargetCharacter = nullptr;
+		IsCCActive = false;
+		Skill_Count = 0.f;
+		Skill_UsedCharacterAccurancyrateCorrectionValue = 0.f;
+		Skill_UsedCharacterCriticalCorrectionValue = 0.f;
+		Skill_TargetAvoidanceRateCorrectionValue = 0.f;
+		Skill_TargetAccurancyRateCorretionValue = 0.f;
+		Skill_Stun = false;
+	}
 
 };
 
@@ -51,13 +126,29 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+public:
 	// Animation
 	UAnimInstance* animInstance;
+
+	class AGrid* GetUnderGrid();
+
+protected:
 	virtual void PostInitializeComponents() override;
 	   	 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AFloatingTextActor> FloatingTextActorBP;
+
+	class AGrid* UnderGrid;
+
+	USoundBase* Rifle_Shot_Sound;
+	USoundBase* Rifle_Reload_Sound;
+	USoundBase* Pistol_Shot_Sound;
+	USoundBase* Pistol_Reload_Sound;
+	USoundBase* Shotgun_Shot_Sound;
+	USoundBase* Shotgun_Reload_Sound;
+	USoundBase* Sniper_Shot_Sound;
+	USoundBase* Sniper_Reload_Sound;
 
 public:
 
@@ -68,11 +159,7 @@ public:
 	void SpawnDamageUI();
 	float TakenDamage;
 
-	UPROPERTY(EditAnywhere , Category = "Status")
-	float LifePoint;
 
-	UPROPERTY(EditAnywhere, Category = "Status")
-	float Damage;
 
 	void Characterdeath();
 	bool IsDeath = false;
@@ -87,6 +174,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Status")
 	float GetLifePointPercent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Status")
+		float GetAmmoPercent() const;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UWidgetComponent *LifeBar {nullptr};
@@ -104,7 +194,7 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	*/
 
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	USkeletalMeshComponent* Weapon;
 
 	UPROPERTY()
@@ -113,9 +203,124 @@ public:
 	UPROPERTY()
 	class UParticleSystem* FireParticle;
 
+	UPROPERTY()
+		class UParticleSystem* BloodParticle;
+
 	void Test();
 
 	//// 1 20 ////
 
 	class AGrid* pGridOnCharacter;
+
+	void SetGridOn();
+	void SetGridOff();
+
+	void SetGridColor(FColor Color);
+
+	bool IsGridOn = false;
+
+public:
+	// 캐릭터 능력치 // - 삭제 예정
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float LifePoint;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float MaxAmmo = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float CurrentAmmo = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float Damage = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float Accuracy = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float Evasion = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float Critical = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float FireCount = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		float Defense = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Status")
+		bool IsStun = false;
+
+	///////////////////////////////////////////
+
+	UPROPERTY(VisibleAnywhere)
+		class USquadCharacterStatComponent* CharacterStat;
+
+	
+	UPROPERTY(EditAnywhere, Category = "HPBar")
+		float XPos_HPBar = 0.f;
+	UPROPERTY(EditAnywhere, Category = "HPBar")
+		float YPos_HPBar = 0.f;
+	UPROPERTY(EditAnywhere, Category = "HPBar")
+		float ZPos_HPBar = 0.f;
+
+	/////
+
+	UFUNCTION()
+		class UStatusBarWidget* GetStatustBarWidget();
+
+	public:
+
+		void CharacterBuff_Init();
+
+		void Set_Buff_Accrancy(int32 InAccrncy);
+		void Set_Buff_Evasion(int32 InEvasion);
+		void Set_DeBuff_Accrancy(int32 InAccrncy);
+		void Set_DeBuff_Evasion(int32 InEvasion);
+
+		int32 Get_Calc_BuffAccrancy();
+		int32 Get_Calc_BuffEvasion();
+
+	private:
+
+		int32 Buff_Accrancy = 0;
+		int32 Buff_Evasion = 0;
+
+		int32 Debuff_Accrancy = 0;
+		int32 Debuff_Evasion = 0;
+
+	private:
+
+		TArray<FCCStatus> CCArray;
+
+	public:
+		void Add_CCArray(FCCStatus CastCC);
+		void Control_CCArray();
+		void Calc_CCArray_Data();
+
+	public:
+		FRotator Character_Rotator_StartRotator;
+		bool Character_BattleRotator_Start = false;
+		FVector BattleLocation;
+
+		void Change_Character_RotatorToStartBattle();
+
+		int32 Character_Skill1_Cooldown = 0;
+		int32 Character_Skill2_Cooldown = 0;
+
+		UPROPERTY()
+			TSubclassOf<class ABullet> ProjectileBulletClass;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+			TSubclassOf<class ABullet> AssaultBulletClass;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+			TSubclassOf<class ABullet> ShotgunBulletClass;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+			TSubclassOf<class ABullet> SniperBulletClass;
+
+		UFUNCTION(BlueprintCallable)
+		void SpawnBullet(FVector SocketLoc);
 };

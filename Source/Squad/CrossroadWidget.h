@@ -17,6 +17,7 @@ class SQUAD_API UCrossroadWidget : public UUserWidget
 	GENERATED_BODY()
 	
 	virtual void NativeConstruct() override;
+		
 
 	UFUNCTION()
 	void OnClickEvent1();
@@ -24,13 +25,30 @@ class SQUAD_API UCrossroadWidget : public UUserWidget
 	UFUNCTION()
 	void OnClickEvent2();
 
+	UFUNCTION()
+		void OnClickEvent3();
+
+	void SetLevel_NextLevel(int32 ButtonNum);
+
+	void RecoverUnit(int32 Value);
+
+	void ChangeGamedifiiculty(int32 Vaule);
+
+
+	FString Control_MapData();
+
+	void SaveCharacterData();
+
 	//////////////////////////////////////////////
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* Crossroad;
+	class UButton* UpCrossroad;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* Home;
+	class UButton* MiddleCrossroad;
+
+	UPROPERTY(meta = (BindWidget))
+		class UButton* DownCrossroad;
 
 	/////////////////////////////////////////////
 

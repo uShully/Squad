@@ -8,6 +8,12 @@
 #include "PlayerSquadCharacter.h"
 #include "BattleTrigger.generated.h"
 
+UENUM(BlueprintType)
+enum class EBattleTriggerState : uint8
+{
+	Normal UMETA(DisplayName = "Normal"), 
+	Boss UMETA(DisplayName = "Boss"),
+};
 
 USTRUCT()
 struct FCoordinate {
@@ -37,10 +43,10 @@ public:
 
 
 
-	void InitCoordinate(int32 XPos, int32 YPos)
+	void InitCoordinate(int32 Coordinate_XPos, int32 Coordinate_YPos)
 	{
-		this->XPos = XPos;
-		this->YPos = YPos;
+		this->XPos = Coordinate_XPos;
+		this->YPos = Coordinate_YPos;
 	}
 
 	void LogTest() 
@@ -64,11 +70,15 @@ class SQUAD_API ABattleTrigger : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABattleTrigger();
-
+	void InitBT();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	void SetEvent();
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category = "Stage")
+	bool eventState; // 1 = battle , 0 = explorer
 	
 public:	
 	
@@ -84,6 +94,7 @@ public:
 	TArray<AActor*> EnemyList;
 
 	void StartBattleEvent();
+	void StartBattleEvent_Boss();
 	void InitBattleSetting();
 
 	bool OverlapSwitch = false;
@@ -121,6 +132,8 @@ public:
 
 	void BattleTrigger_PlayerSpreadOut();
 
+	void BattleTrigger_PlayerSetRotator();
+
 	//UFUNCTION()
 	//void SetEventBoxState(EEventBoxState EventBoxState);
 
@@ -128,9 +141,22 @@ public:
 
 	void DeleteEnemyCharacter();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Enemy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Neutral;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Player;
+
+	bool GetEventState();
+
+	void InitBattleBox_Boss();
+
 private:
 
-	TArray<AActor*> SpawnBox;
+	TArray<AActor*> SpawnGridManger;
 
 	int32 SpawndBoxCout = 0;
 	int32 PlayerAreaCout = 0;
@@ -157,5 +183,8 @@ public:
 
 	AActor* tempGrid;
 	FVector GetNeturalAreaLocation();
+
+	UPROPERTY(EditAnywhere)
+	EBattleTriggerState BTState;
 
 };

@@ -13,9 +13,9 @@ AFloatingTextActor::AFloatingTextActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Floating = CreateDefaultSubobject<UWidgetComponent>(FName("Floating"));
+	SetRootComponent(Floating);
 
-
-	static ConstructorHelpers::FClassFinder<UFloatingTextWidget> FLOATING(TEXT("WidgetBlueprint'/Game/FloatingBP.FloatingBP_C'"));
+	static ConstructorHelpers::FClassFinder<UFloatingTextWidget> FLOATING(TEXT("WidgetBlueprint'/Game/UI/FloatingBP.FloatingBP_C'"));
 	if (FLOATING.Class)
 	{
 		FloatingWidgetClass = FLOATING.Class;

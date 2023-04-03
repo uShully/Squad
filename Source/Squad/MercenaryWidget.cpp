@@ -60,16 +60,9 @@ void UMercenaryWidget::ClickInCludeFirstMercenary()
 
 	if(gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
 	{
-		UE_LOG(LogClass, Log, TEXT(" Include "));
 		gameIns->IncludeCharacterData(FirstMercenaryData);
 		RefreshMark_Include(FText::FromString("a"));
-	}
-	else
-	{
-		UE_LOG(LogClass, Log, TEXT(" MAX "));
-	}
-
-	
+	}	
 }
 
 void UMercenaryWidget::ClickInCludeSecondMercenary()
@@ -78,15 +71,9 @@ void UMercenaryWidget::ClickInCludeSecondMercenary()
 
 	if (gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
 	{
-		UE_LOG(LogClass, Log, TEXT(" Include "));
 		gameIns->IncludeCharacterData(SecondMercenaryData);
 		RefreshMark_Include(FText::FromString("b"));
 	}
-	else
-	{
-		UE_LOG(LogClass, Log, TEXT(" MAX "));
-	}
-
 }
 
 void UMercenaryWidget::ClickInCludeThirdMercenary()
@@ -95,15 +82,9 @@ void UMercenaryWidget::ClickInCludeThirdMercenary()
 
 	if (gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
 	{
-		UE_LOG(LogClass, Log, TEXT(" Include "));
 		gameIns->IncludeCharacterData(ThirdMercenaryData);
 		RefreshMark_Include(FText::FromString("c"));
 	}
-	else
-	{
-		UE_LOG(LogClass, Log, TEXT(" MAX "));
-	}
-
 }
 
 void UMercenaryWidget::ClickExCludeFirstMercenary()

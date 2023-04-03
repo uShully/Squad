@@ -32,11 +32,18 @@ public:
 	UFUNCTION()
 	void InitEventBox();
 
+	void CreateLastBattleStage();
+
+	void CreateEventSpot();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
 	int32 numberOfBox;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
 	TSubclassOf<AActor> BattleTriggerToSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+		TSubclassOf<AActor> EventSpotToSpawn;
 
 
 	

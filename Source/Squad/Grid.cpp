@@ -12,44 +12,45 @@ AGrid::AGrid()
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Plane"));
 	Plane->SetupAttachment(RootComponent);
 
+	/*
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>Plane_Body(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane'"));
 	if (Plane_Body.Succeeded())
 	{
 		Plane->SetStaticMesh(Plane_Body.Object);
 	}
-
+	*/
 	
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_White(TEXT("Material'/Game/DevFile/M_White.M_White'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_White(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_White.M_White'"));
 	if (M_White.Object != NULL)
 	{
 		WhiteMaterial = (UMaterial*)M_White.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_Red(TEXT("Material'/Game/DevFile/M_Red.M_Red'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_Red(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_Red.M_Red'"));
 	if (M_Red.Object != NULL)
 	{
 		RedMaterial = (UMaterial*)M_Red.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_Blue(TEXT("Material'/Game/DevFile/M_Blue.M_Blue'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_Blue(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_Blue.M_Blue'"));
 	if (M_Blue.Object != NULL)
 	{
 		BlueMaterial = (UMaterial*)M_Blue.Object;
 	}
 	
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_Green(TEXT("Material'/Game/DevFile/M_Green.M_Green'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_Green(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_Green.M_Green'"));
 	if (M_Green.Object != NULL)
 	{
 		GreenMaterial = (UMaterial*)M_Green.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_Black(TEXT("Material'/Game/DevFile/M_Black.M_Black'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_Black(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_Black.M_Black'"));
 	if (M_Black.Object != NULL)
 	{
 		BlackMaterial = (UMaterial*)M_Black.Object;
 	}
 	
-	static ConstructorHelpers::FObjectFinder<UMaterial> M_Obstacle(TEXT("Material'/Game/DevFile/M_ObstacleGrid.M_ObstacleGrid'"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_Obstacle(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_ObstacleGrid.M_ObstacleGrid'"));
 	if (M_Obstacle.Object != NULL)
 	{
 		ObstacleMaterial = (UMaterial*)M_Obstacle.Object;
@@ -63,13 +64,6 @@ void AGrid::BeginPlay()
 	Super::BeginPlay();
 
 	
-}
-
-// Called every frame
-void AGrid::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 
 void AGrid::SetGridState()
@@ -102,7 +96,7 @@ void AGrid::SetGridInfo()
 	GridInfo.init();
 	GridInfo.XPos = this->XPos;
 	GridInfo.YPos = this->YPos;
-	SetGridInfo_Material_temp();
+	SetGridInfo_Material_InitInfo();
 }
 
 void AGrid::SetGridInfo_Material()
@@ -125,7 +119,7 @@ void AGrid::SetGridInfo_Material()
 	}
 }
 
-void AGrid::SetGridInfo_Material_temp()
+void AGrid::SetGridInfo_Material_InitInfo()
 {
 	if (GridInfo.GOTO == EGridOntheObject::Normal)
 	{
@@ -141,12 +135,22 @@ void AGrid::SetGridInfo_Material_temp()
 	}
 }
 
-void AGrid::SetGridInfo_Material_temp2()
+void AGrid::SetGridInfo_Material_Black()
 {
 	Plane->SetMaterial(0, BlackMaterial);
 }
 
-void AGrid::SetGridInfo_Material_temp3()
+void AGrid::SetGridInfo_Material_Red()
+{
+	Plane->SetMaterial(0, RedMaterial);
+}
+
+void AGrid::SetGridInfo_Material_Blue()
+{
+	Plane->SetMaterial(0, BlueMaterial);
+}
+
+void AGrid::SetGridInfo_Material_Green()
 {
 	Plane->SetMaterial(0, GreenMaterial);
 }
@@ -180,7 +184,6 @@ void AGrid::InitGrid()
 
 	InitCoor.pGrid = this;
 	InitCoor.InitCoordinate(XPos, YPos);
-	//InitCoor.OntheObject = tempGOTO;
 
 	if (YPos == 0)
 	{
@@ -192,18 +195,5 @@ void AGrid::InitGrid()
 		parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);		
 	}
 	parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid = this;
-	
-
-	/*
-	if(parentEventBox->parentBattleTrigger->Coordinate.Num() == 0)
-		parentEventBox->parentBattleTrigger->Coordinate.Add(InitCoor);	
-	else if (parentEventBox->parentBattleTrigger->Coordinate.Num() < XPos)
-		parentEventBox->parentBattleTrigger->Coordinate.Add(InitCoor);
-	else
-		parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);
-	*/
-	//parentEventBox->parentBattleTrigger->Coordinate[YPos][YPos].MultiArray
-	//parentEventBox->parentBattleTrigger->Coordinate[YPos].MultiArray[XPos].pGrid = this;
-	//parentEventBox->parentBattleTrigger->Coordinate[YPos].MultiArray[XPos].LogTest();
 
 }

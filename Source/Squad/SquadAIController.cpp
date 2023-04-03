@@ -10,6 +10,8 @@
 #include "PlayerSquadCharacter.h"
 #include "EnemySquadCharacter.h"
 #include "SquadCameraManager.h"
+#include "CharacterAnimInstance.h"
+#include "Engine/Engine.h"
 
 ASquadAIController::ASquadAIController()
 {
@@ -32,6 +34,8 @@ void ASquadAIController::Possess(APawn* InPawn)
 	{		
 		PlayerPawn = true;
 		PlayerChar = Cast<APlayerSquadCharacter>(InPawn);
+		ReceiveMoveCompleted.AddDynamic(this, &ASquadAIController::Simple);
+		
 	}
 
 	
@@ -41,25 +45,26 @@ void ASquadAIController::Tick(float Delta)
 {
 	Super::Tick(Delta);
 
-	if (PlayerChar != nullptr )
+	if (PlayerChar != nullptr)
 		PlayerCharater_Move();
 }
 
 void ASquadAIController::PlayerCharater_Move()
 {
 	Camera = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
-
-	if(Camera->ControlValue_PlayerCharacterMovement)
+	
+	if(Camera->ControlValue_PlayerCharacterMovement_BeginPlay)
 	{
 		float a = PlayerChar->numbering;
-		FVector Loc = (Camera->BoxColiision->GetComponentLocation());
+		FVector Loc = (Camera->UnitPos_First->GetComponentLocation());
 		FVector Loc2 = FVector(180 * a, 0.f, 0.f);
 
 		FVector FinalLocation = Loc + Loc2;
 
 		MoveToLocation(FinalLocation , (-1.f), false);
 		//UE_LOG(LogClass, Log, TEXT(" Loc : %s , numbering : %d"), *FinalLocation.ToString(), PlayerChar->numbering);
-	}	
+	}
+	
 }
 
 void ASquadAIController::PlayerCharater_MoveLoc(FVector Loc)
@@ -80,6 +85,8 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 	AGrid* BehindGrid;
 	FVector SpreadLoc;
 	
+	
+
 	for(int32 i = 0 ; i < num ; i++ )
 	{
 		if (Cast<AGrid>(Cast<ABattleTrigger>(gameMode->BTIns)->Coordinate[tempGrid->XPos].MultiArray[i].pGrid)->
@@ -87,20 +94,44 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 		{
 			BehindGrid = Cast<AGrid>(Cast<ABattleTrigger>(gameMode->BTIns)->Coordinate[tempGrid->XPos].MultiArray[i].pGrid);
 			FVector SpreadLoc = BehindGrid->GetActorLocation();
-			UE_LOG(LogClass, Log, L" Move Spread2 %s", *SpreadLoc.ToString());
 			tempGrid->GridInfo.GOTO = EGridOntheObject::Normal;
 			tempGrid->SetGridInfo_Material();
 			BehindGrid->GridInfo.GOTO = EGridOntheObject::Player;
 			BehindGrid->SetGridInfo_Material();
 			PlayerChar->SetUnderGrid(BehindGrid);
 
+			//PlayerChar->Character_BattleRotator_Start = true;
+			//PlayerChar->BattleLocation = SpreadLoc;
+			if (BehindGrid->YPos == 3 || BehindGrid->YPos == 4)
+				PlayerChar->SpreadOutDirection = true;
+			else if (BehindGrid->YPos == 0 || BehindGrid->YPos == 1)
+				PlayerChar->SpreadOutDirection = false;
+
+			PlayerChar->GetCharacterMovement()->MaxWalkSpeed = 600.f;
+			PlayerChar->GetCharacterMovement()->MaxAcceleration = 400.f;
+
+			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->Call_GetSpreadOutDirection();
+
 			MoveToLocation(SpreadLoc, (-1.f), false);
+			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->IsSpreadOut = true;
+			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->Call_GetIsSpreadOut();
+
+			testbool = true;			
+			
+			
+		
+			
 		}
 	}
 }
 
 void ASquadAIController::EnemyCharacter_ActiveAI()
 {	
+	
+	if (EnemyChar->IsStun == true) {
+		EnemyChar->Enemy_TurnEnd();
+	}
+	else 
 	EnemyCharacter_ShotAI();
 }
 
@@ -124,29 +155,42 @@ void ASquadAIController::EnemyChararacter_SetFrindlyCharacterList(TArray<AActor*
 {
 	
 
-	if (FrindlyCharacterList.Num() > 0)
-		FrindlyCharacterList.Empty();
+	if (AliveFrindlyCharacterList.Num() > 0)
+		AliveFrindlyCharacterList.Empty();
 
-	FrindlyCharacterList = List;
+	AliveFrindlyCharacterList = List;
 }
 
 void ASquadAIController::EnemyCharacter_ShotAI()
 {
 	APlayerSquadCharacter* tempChar;
 	
-	if(FrindlyCharacterList.Num() > 0)
+	if(AliveFrindlyCharacterList.Num() > 0)
 	{
-	tempChar = Cast<APlayerSquadCharacter>(FrindlyCharacterList[0]);
+		//tempChar = Cast<APlayerSquadCharacter>(AliveFrindlyCharacterList[0]);
+		
+		float FrindlyCharacterNum = AliveFrindlyCharacterList.Num();
+		int32 RandCharacterNum = FMath::FloorToInt(FMath::RandRange(0.f, FrindlyCharacterNum));
 
-	/*
-	for (int32 i = 1; i < FrindlyCharacterList.Num(); i++)
-	{
-		if (Cast<APlayerSquadCharacter>(tempChar)->LifePoint > FrindlyCharacterList[i]->LifePoint)
-		{
-			tempChar = FrindlyCharacterList[i];
-		}
+		tempChar = Cast<APlayerSquadCharacter>(AliveFrindlyCharacterList[RandCharacterNum]);
+
+		EnemyChar->tempTargetCharacter = tempChar;
+		EnemyChar->Enemy_ReadytoShot(tempChar);
+		EnemyChar->SetShotTarget(tempChar);
 	}
-	*/
-	EnemyChar->Enemy_Shot(tempChar);
+}
+
+void ASquadAIController::Simple(FAIRequestID RequestID, EPathFollowingResult::Type Result)
+{
+	if(testbool == true) { 
+		if (PlayerChar != nullptr)
+			PlayerChar->Character_BattleRotator_Start = true;
 	}
+	//SetControlRotation
+}
+
+void ASquadAIController::DebugFuc()
+{
+	
+	//->AddOnScreenDebugMessage(-1, 10.f, FColor::Black, TEXT("FIN"));
 }

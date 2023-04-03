@@ -39,6 +39,8 @@ public:
 
 	void InitGrid();
 
+	void InitGrid_Boss();
+
 
 
 	// Called every frame
@@ -59,8 +61,40 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
 		TSubclassOf<AActor> EnemyCharacterToSpawn;
 
+	//
+
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
 		TSubclassOf<AActor> ObstacleToSpawn;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
+		TArray<TSubclassOf<AActor>> ObstacleToSpawnArray;
+
+	UFUNCTION()
+		TSubclassOf<AActor> GetRandObstacleInArray();
+
+	void SetEnemyCharacterStatData(class AEnemySquadCharacter* EnemyCharacter, int32 BrunchNum);
+
+	int32 SetEnemyStatRand();
+
+	// EventObject
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		TSubclassOf<AActor> ObjectToSpawn;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		int32 ObjectToSpawnXPos;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		int32 ObjectToSpawnYPos;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		float ObjectToSpawnLocXPos;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		float ObjectToSpawnLocYPos;
+
+	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
+		float ObjectToSpawnLocZPos;
 
 
 	UPROPERTY()
@@ -103,22 +137,32 @@ public:
 
 	void Spawned_Enemy();
 
+	void Spawned_Enemy_Boss();
+
 private:
 	
 	
 	void Spawned_Obstacle(AActor* Grid, EEventBoxState Pattern);
 	int32 Obstacle_XPosCount = 1;
+	int32 Obstacle_XPosCount_netural = 5;
 	int32 Obstacle_XPosCount_Enemy = 10;
 	bool Obstacle_YPosSwitch = false;
 
+
+
 	void Spawned_ObstacleCheck();
 
-	float CorrentionSpawnObstacle;
+	void Spawned_EventObject();
+
+	float CorrentionSpawnObstacle =0.f;
+	FVector ObstacleLocCorrectionValue;
+	FVector ObstacleScaleCorrectionValue;
 
 public:
 
 	TArray<AActor*> SpawnGrids;
 	TArray<AActor*> SpawnObtacle;
+
 
 public:
 
@@ -126,4 +170,17 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Coordinate")
 	int32 EventBoxNumber;
+
+	TArray<class AGrid*> YGridArray;
+	TArray<TArray<class AGrid*>> XGridArray;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		int32 GD;
+
+		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+			int32 XPosLocRandValue;
+		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		int32 Obstacle_YPosRand_First = 0;
+		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+		int32 Obstacle_YPosRand_Second = 0;
 };

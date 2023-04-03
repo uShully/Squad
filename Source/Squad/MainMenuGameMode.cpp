@@ -7,7 +7,7 @@
 
 AMainMenuGameMode::AMainMenuGameMode()
 {
-	static ConstructorHelpers::FClassFinder<UUserWidget> BeginplayWidget(TEXT("WidgetBlueprint'/Game/DevFile/MainMenuWidgetBP.MainMenuWidgetBP_C'"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> BeginplayWidget(TEXT("WidgetBlueprint'/Game/Map/M_MainMenu_Widget/M_MainMenu_WidgetBP.M_MainMenu_WidgetBP_C'"));
 	if (BeginplayWidget.Succeeded())
 	{
 		BeginPlayWidgetClass = BeginplayWidget.Class;
@@ -18,7 +18,7 @@ void AMainMenuGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ViewBeginPlayWidget();
+	//ViewBeginPlayWidget();
 }
 
 void AMainMenuGameMode::ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass)

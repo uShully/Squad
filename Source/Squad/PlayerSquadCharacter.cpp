@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #define BuffOn  true
 #define BuffOff false
@@ -8,13 +8,20 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "SquadGameInstance.h"
 #include "Grid.h"
+#include "SquadCharacterStatComponent.h"
+#include "Engine/Engine.h"
+#include "SquadGameMode.h"
+#include "SquadCharacterSkillComponent.h"
+#include "SquadController.h"
+#include "SquadAIController.h"
+#include "BattleWidget.h"
 //#include "Kismet/GameplayStatics.h"
 //#include "UObject/ConstructorHelpers.h"
 
 APlayerSquadCharacter::APlayerSquadCharacter()
 {
 	static ConstructorHelpers::FClassFinder<UAnimInstance>
-		PlayerCharacterAnimBP(TEXT("Blueprint'/Game/DevFile/PlayerCharacterAnimInstance.PlayerCharacterAnimInstance_C'"));
+		PlayerCharacterAnimBP(TEXT("Blueprint'/Game/BLUEPRINT/PlayerCharacterAnimInstance.PlayerCharacterAnimInstance_C'"));
 	if (PlayerCharacterAnimBP.Succeeded())
 	{
 		GetMesh()->SetAnimInstanceClass(PlayerCharacterAnimBP.Class);
@@ -25,55 +32,35 @@ APlayerSquadCharacter::APlayerSquadCharacter()
 	AudioComp->SetupAttachment(RootComponent);
 	*/
 
-	static ConstructorHelpers::FObjectFinder<USoundBase> FireSound(L"SoundWave'/Game/GunSoundPack/Guns/gun_rifle_shot_01.gun_rifle_shot_01'");
+	/*
+	static ConstructorHelpers::FObjectFinder<USoundBase> FireSound(L"SoundWave'/Game/AUDIO/Sound/GunSound/gun_rifle_shot_01.gun_rifle_shot_01'");
 	if (FireSound.Succeeded())
 	{
 		Fire_Sound = FireSound.Object;
 	}
+	*/
+	//
 
-	static ConstructorHelpers::FObjectFinder<USoundBase> GetHitSound(L"SoundWave'/Game/HumanMaleA/Wavs/voice_male_grunt_pain_12.voice_male_grunt_pain_12'");
+	static ConstructorHelpers::FObjectFinder<USoundBase> GetHitSound(L"SoundWave'/Game/AUDIO/HumanMaleA/Wavs/voice_male_grunt_pain_12.voice_male_grunt_pain_12'");
 	if (GetHitSound.Succeeded())
 	{
 		GetHit_Sound = GetHitSound.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<USoundBase> DeathSound(L"SoundWave'/Game/HumanMaleA/Wavs/voice_male_grunt_pain_death_08.voice_male_grunt_pain_death_08'");
+	static ConstructorHelpers::FObjectFinder<USoundBase> DeathSound(L"SoundWave'/Game/AUDIO/HumanMaleA/Wavs/voice_male_grunt_pain_death_08.voice_male_grunt_pain_death_08'");
 	if (DeathSound.Succeeded())
 	{
 		Death_Sound = DeathSound.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<USoundBase> SelectedSound(L"SoundWave'/Game/HumanMaleA/Wavs/voice_male_soldier_enemy_spotted_01.voice_male_soldier_enemy_spotted_01'");
+	//
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> SelectedSound(L"SoundWave'/Game/AUDIO/SFX/UI_Button.UI_Button'");
 	if (SelectedSound.Succeeded())
 	{
 		Selected_Sound = SelectedSound.Object;
 	}
-
-
-	/*
-	// particleSystem
-
-	ParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>("ParticleSystem");
-	ParticleSystem->SetupAttachment(RootComponent);
-	ParticleSystem->bAutoActivate = false;
-	// ParticleSystem->SetRelativeLocation(FVector(-20.0f, 0.0f, 20.0f);
-
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(L"");
-	if (ParticleAsset.Succeeded())
-	{
-		ParticleSystem->SetTemplate(ParticleAsset.Object);
-	}
-	*/
-
-	/*
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SoliderBODY(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_CHR.SK_Military_CHR'"));
-	if (SoliderBODY.Succeeded())
-	{
-		GetMesh()->SetSkeletalMesh(SoliderBODY.Object);
-	}
-	*/
-
-	//RootComponent = GetMesh();
+	
 
 	Cap = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Cap"));
 	Cap_equip = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Cap equip"));
@@ -119,78 +106,137 @@ APlayerSquadCharacter::APlayerSquadCharacter()
 	Kneepad_L->SetupAttachment(GetMesh());
 	Holster->SetupAttachment(GetMesh());
 
+	// c++ 사용시 Parent Socket을 지정하지 못하는 문제를 해결하기위해서
+	// AttachTo를 사용해서 지정해야한다.
+	WeaponSlot = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSlot"));
+	//WeaponSlot->AttachTo(Hands, TEXT("weaponSocket"), EAttachLocation::KeepRelativeOffset, true);
+	WeaponSlot->AttachToComponent(Hands, FAttachmentTransformRules::KeepRelativeTransform, TEXT("weaponSocket"));
+		
+	LifeBar->SetWorldLocation(FVector(50.f, -50.f, 200.f));
 
-	/*
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> HEAD(TEXT("SkeletalMesh'/Game/Military/Mesh/Body/SK_Military_Head1.SK_Military_Head1'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CAP(TEXT("SkeletalMesh'/Game/Military/Mesh/Head/SK_Military_Helmet2.SK_Military_Helmet2'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CAP_EQUIP(TEXT("SkeletalMesh'/Game/Military/Mesh/Head/SK_Military_Helmet2_fastering.SK_Military_Helmet2_fastering'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> HEAD_EQUIP1(TEXT("SkeletalMesh'/Game/Military/Mesh/Head/SK_Military_Headset1.SK_Military_Headset1'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> HEAD_EQUIP2(TEXT("SkeletalMesh'/Game/Military/Mesh/Head/SK_Military_Goggles1.SK_Military_Goggles1'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SHIRT(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Shirt5.SK_Military_Shirt5'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> PANTS(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Pants4.SK_Military_Pants4'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BOOTS(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Boots5.SK_Military_Boots5'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> HANDS(TEXT("SkeletalMesh'/Game/Military/Mesh/Body/SK_Military_Hands_Male.SK_Military_Hands_Male'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Vest1.SK_Military_Vest1'"));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST_OUTFIT(TEXT("SkeletalMesh'/Game/Military/Mesh/Outfit/SK_Military_Outfit9.SK_Military_Outfit9'"));
-//	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BACKPACK(TEXT(""));
-//	static ConstructorHelpers::FObjectFinder<USkeletalMesh> BACKPACK2(TEXT(""));
-//	static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST_COLLAR(TEXT(""));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST_SHOULDER_R(TEXT(""));
-//	static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST_SHOULDER_L(TEXT(""));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> VEST_BOTTOM(TEXT(""));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> DECALS(TEXT(""));
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> RADIO(TEXT("SkeletalMesh'/Game/Military/Mesh/SK_Military_Radio3.SK_Military_Radio3'"));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> KNEEPAD_R(TEXT(""));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> KNEEPAD_L(TEXT(""));
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> HOLSTER(TEXT(""));
-
-	GetMesh()->SetSkeletalMesh(HEAD.Object);
-	Cap->SetSkeletalMesh(CAP.Object);
-	Cap_equip->SetSkeletalMesh(CAP_EQUIP.Object);
-	Head_equip1->SetSkeletalMesh(HEAD_EQUIP1.Object);
-	Head_equip2->SetSkeletalMesh(HEAD_EQUIP2.Object);
-	Shirt->SetSkeletalMesh(SHIRT.Object);
-	Pants->SetSkeletalMesh(PANTS.Object);
-	Boots->SetSkeletalMesh(BOOTS.Object);
-	Hands->SetSkeletalMesh(HANDS.Object);
-	Vest->SetSkeletalMesh(VEST.Object);
-	Vest_outfit->SetSkeletalMesh(VEST_OUTFIT.Object);
-	Radio->SetSkeletalMesh(RADIO.Object);
-
-	*/
+	CharacterSkillComp = CreateDefaultSubobject<USquadCharacterSkillComponent>(TEXT("SKillComp"));
 
 	
-	/*
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> Assault_Rifle(L"SkeletalMesh'/Game/MilitaryWeapDark/Weapons/Assault_Rifle_B.Assault_Rifle_B'");
-	if (Assault_Rifle.Succeeded())
-	{
-		Weapon->SetSkeletalMesh(Assault_Rifle.Object);
+}
+
+void APlayerSquadCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+
+	//Calc_Damage_distribution();
+	//Cast<UStatusBarWidget>(LifeBar->GetUserWidgetObject())->SetProgressBarImage(2);
+}
+
+void APlayerSquadCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if(Character_BattleRotator_Start == true && IsCharacterUseAttack == false) {
+		SetActorRotation(FMath::Lerp(GetActorRotation(), Character_Rotator_StartRotator, DeltaTime*10));
+		if (GetActorRotation() == Character_Rotator_StartRotator)
+			Character_BattleRotator_Start = false;
 	}
-	Weapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WEAPON"));
-	*/
+	if (IsCharacterUseAttack == true) {
+		FVector CharLoc = GetActorLocation();
+		FVector TargetLoc = tempTargetCharacter->GetActorLocation();
+		FVector Rot = TargetLoc - CharLoc;
+		auto InRot = FMath::RInterpTo(GetActorRotation(), Rot.ToOrientationRotator(), DeltaTime, 10.f);
+		SetActorRotation(InRot);
+	}
 
 
-	
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true
+		&& Cast<ASquadAIController>(GetController())->GetMoveStatus() == EPathFollowingStatus::Idle
+		&& Cast<UCharacterAnimInstance>(animInstance)->IsSpreadOut == true) {
+		Cast<UCharacterAnimInstance>(animInstance)->IsSpreadOut = false;
+		Cast<UCharacterAnimInstance>(animInstance)->Call_GetIsSpreadOut();
+	}
+}
+
+void APlayerSquadCharacter::InitCharacterStat()
+{
+	LifePoint = CharacterStat->GetCharacterHPValue();
+	MaxLifePoint = LifePoint;
+	CurrentAmmo = CharacterStat->GetWeaponMaxFireCount();
+	MaxAmmo = CurrentAmmo;
+
+	GetStatustBarWidget()->GetHealthBar()->PercentDelegate.BindUFunction(this, FName("GetLifePointPercent"));
+	GetStatustBarWidget()->GetAmmoBar()->PercentDelegate.BindUFunction(this, FName("GetAmmoPercent"));
+
+	SetPlayerSkill_ClassNum(ClassNum);
 }
 
 void APlayerSquadCharacter::SetContentMesh(USkeletalMeshComponent* mesh, const TCHAR* ContentPath)
 {
-	if(ContentPath != nullptr)
+	if (ContentPath == nullptr)
+	{
+		mesh = nullptr;
+	}
+	else if(ContentPath != nullptr)
 	{
 		USkeletalMesh* NewMesh = Cast<USkeletalMesh>(StaticLoadObject(USkeletalMesh::StaticClass(), NULL, ContentPath));
 		if (NewMesh)
 		{
-			mesh->SetSkeletalMesh(NewMesh);
-	
+			mesh->SetSkeletalMesh(NewMesh);	
 		}
-		UE_LOG(LogClass, Log, TEXT(" SetSkeletalMesh "));
+	}
+	
+}
+
+void APlayerSquadCharacter::SetFXSound(const TCHAR* HitSoundContentPath, const TCHAR* DeadSoundContentPath)
+{
+	if (HitSoundContentPath != nullptr)
+	{
+		USoundBase* NewSound = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), NULL, HitSoundContentPath));
+		if (NewSound)
+		{
+			GetHit_Sound = NewSound;
+		}
 	}
 	else
 	{
-		UE_LOG(LogClass, Log, TEXT(" ContentPath nullptr "));
+		GetHit_Sound = nullptr;
+	}
+
+	if (DeadSoundContentPath != nullptr)
+	{
+		USoundBase* NewSound_2 = Cast<USoundBase>(StaticLoadObject(USoundBase::StaticClass(), NULL, DeadSoundContentPath));
+		if (NewSound_2)
+		{
+			Death_Sound = NewSound_2;
+		}
+	}
+	else
+	{
+		Death_Sound = nullptr;
+	}
+
+}
+
+void APlayerSquadCharacter::SetContentMeshMat(USkeletalMeshComponent* mesh, const TCHAR* ContentPath ,int32 MatIndex)
+{
+	
+	if (ContentPath != nullptr)
+	{		
+		UMaterial* MeshMat = Cast<UMaterial>(StaticLoadObject(UMaterial::StaticClass(), NULL, ContentPath));
+		if (MeshMat)
+		{
+			mesh->SetMaterial(MatIndex ,MeshMat);
+		
+		}
+		else
+		{
+		
+		}
+	}
+	else
+	{
 		mesh = nullptr;
 	}
 }
+
+
 
 void APlayerSquadCharacter::SetWeaponMesh()  //USkeletalMeshComponent* mesh
 {
@@ -238,70 +284,317 @@ void APlayerSquadCharacter::SetSkeletalMeshComp(USkeletalMesh* Head, USkeletalMe
 
 void APlayerSquadCharacter::SetShotReady()
 {
-	StateEnum = EStateEnum::SE_Shot;
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death))	{
+		
+		if(StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
+			Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
+		else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
+			Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(false);
 
+		SetHighLight(true);
+
+		StateEnum = EStateEnum::SE_Shot;
+		Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(true);
+	}
+	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 0);
+	UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+	BW->ChangeSelectedButton(BW->GetAttackButton());
+	UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+		
+	//DisableInput(Cast<ASquadController>(GetWorld()->GetFirstPlayerController()));
+	
+}
+
+void APlayerSquadCharacter::Debug_Shot(ASquadCharacter* Target) // 시즌 2에서 함수명 고쳐야함
+{
+	tempTargetCharacter = Target;
 	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
+	FString WeaponName = CharacterStat->GetCharacterWeaponName();
+
+	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(0.5f);
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
+
 	if (CharAnimInst != nullptr)
 	{
+		/*
+		if (WeaponName == "Pistol") {
+						
+				CharAnimInst->AimingPistol();
+		;
+		}
+		else 
+		*/
+		IsCharacterUseAttack = true;
+	
+
+		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(false);
 		CharAnimInst->Aiming();
+	}
+
+	
+}
+
+void APlayerSquadCharacter::BeShot()
+{
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+
+	FVector CharLoc = GetActorLocation();
+	FVector TargetLoc = tempTargetCharacter->GetActorLocation();
+	FVector Rot = TargetLoc - CharLoc;
+	//SetActorRotation(Rot.ToOrientationRotator());
+	
+	float HitCount = 0.f;
+	float CriticalCount = 0.f;
+	float ActualDamage = 0.f;
+
+
+	if (gameIns->TargetCharacter != nullptr)
+	{
+		UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+
+		
+		//GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
+
+		FString WeaponName = CharacterStat->GetCharacterWeaponName();
+
+		if (WeaponName == "Rifle") {
+			//UGameplayStatics::PlaySoundAtLocation(this, Rifle_Shot_Sound, GetActorLocation(), 0.2f);
+			CharAnim->BeShotRifle();
+		}
+		else if (WeaponName == "Pistol") {
+			//UGameplayStatics::PlaySoundAtLocation(this, Pistol_Shot_Sound, GetActorLocation(), 0.2f);
+			CharAnim->BeShotPistol();
+		}
+		else if (WeaponName == "Shotgun") {
+			//UGameplayStatics::PlaySoundAtLocation(this, Shotgun_Shot_Sound, GetActorLocation(), 0.2f);
+			CharAnim->BeShotShotgun();
+		}
+		else if (WeaponName == "Sniper") {
+			//UGameplayStatics::PlaySoundAtLocation(this, Sniper_Shot_Sound, GetActorLocation(), 0.2f);
+			CharAnim->BeShotSniper();
+		}
+
+		// 데미지 공식
+		// 명중 계산 = (명중) - (회피)
+		// 전탄 공격 = (공격) * (탄환)
+		// 기대 공격 = (공격) * (탄환) * {(명중) - (회피)} = (전탄공격) * (명중계산)
+
+		// 전탄 치명 = (치명) * (탄환)
+		// 기대 치명 = (치명) * (탄환) * {(명중) - (회피)}
+
+		// 맞춘 탄환에 수에 따라서 전탄치명 공식을 대입을 시켜서 적용
+
+		// 예시) 6발 명중 50
+		//       3발 적중
+		//       3 * 치명타 확률 (5%)
+		//       85퍼 확률 일반공격 // 15퍼 확률 치명타
+
+		//  공격 함수에서 데미지를 계산을해서 호출
+		//  - 연출하려면 애니메이션 모션이 필요함(주류) - 할순있음 문제가 직접하던가 사던가?
+		//  -  
+
+		//           = 연출 =
+		//  - 총기화염이 6번이 튀도록 할수있음( 필요가 없음 )
+		//  - 총이 발사되는 타타탕 사운드로 표현
+		//  - 총알이 날라가는게 없잖(나중에 추가가 될순있어도 현재는 없음) = (이거는 아마 코드로 해결이 가능하긴함)
+
+		// 애니메이션 연출을 그렇하던가 - 함수호출을 해가지고 연출을 그렇게하던가
+		// 3 / 3 (제일 편함 애니메이션) 문제 : 애니메이션 모션을 구할수가 없음
+
+		for (int32 i = 0; i < CharacterStat->GetWeaponFireCount(); i++)
+		{
+			if (FMath::FRandRange(0.f, 100.f) < CharacterStat->GetCharacterAccuracyCorrectionValue() + CharacterStat->GetWeaponAccuracy() - tempTargetCharacter->Evasion) // 맞췃을때
+			{
+				HitCount++; // 히트 카운트 계산
+			}
+		}
+		for (int32 i = 0; i < HitCount; i++)
+		{
+			if (FMath::FRandRange(0.f, 100.f) < CharacterStat->GetCharacterCriticalCorrectionValue() + CharacterStat->GetWeaponCritical())
+			{
+				// 치명타 계산
+				CriticalCount++;
+			}
+		}
+
+		ActualDamage = CharacterStat->GetWeaponDamage() * HitCount + 1000.f * CriticalCount; // 마지막 데미지
+
+		if(ActualDamage > 0)
+			UGameplayStatics::ApplyDamage(tempTargetCharacter, ActualDamage, GetWorld()->GetFirstPlayerController(), this, nullptr);
+		else if (ActualDamage <= 0) {
+			FDamageEvent DamegeEvent;
+			Cast<ASquadCharacter>(tempTargetCharacter)->TakeDamage(0, DamegeEvent, nullptr, this);
+		}
+	}
+
+	if (CurrentAmmo >= 0)
+		CurrentAmmo -= 1;
+
+	//SetCharacterEnd();
+
+	if (UnderGrid != nullptr)
+		UnderGrid->SetGridInfo_Material_temp2();
+
+	//SetIsCharacterUseAttackTotrue();
+
+}
+
+//////////////////////////// Reload /////////////////////////////////////////
+
+void APlayerSquadCharacter::SetReloadReady()
+{
+	if(CurrentAmmo != MaxAmmo) {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+
+			StateEnum = EStateEnum::SE_Reload;
+			Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(false);
+		}
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 3);
+		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+		BW->ChangeSelectedButton(BW->GetReloadButton());
+		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+	}
+	else {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+
+			StateEnum = EStateEnum::SE_Stay;
+		}
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 3);
+		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+		BW->ChangeSelectedButton(BW->GetReloadButton());
+		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
 	}
 }
 
-void APlayerSquadCharacter::Debug_Shot(ASquadCharacter* Target)
+void APlayerSquadCharacter::BeReload()
 {
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	
-	FVector CharLoc = GetActorLocation();
-	FVector TargetLoc = Target->GetActorLocation();
-	FVector Rot = TargetLoc - CharLoc;
-	SetActorRotation(Rot.ToOrientationRotator());
-	
+	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 
-	if(gameIns->TargetCharacter != nullptr)
-	{
-		UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
-	
-		CharAnim->BeShot();
-		GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
+	if ((StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+		CurrentAmmo = CharacterStat->GetWeaponMaxFireCount();
 
-		UGameplayStatics::PlaySoundAtLocation(this, Fire_Sound, GetActorLocation(), 0.2f);
-		UGameplayStatics::ApplyDamage(Target, Damage, GetWorld()->GetFirstPlayerController(), this, nullptr);
+		FString WeaponName = CharacterStat->GetCharacterWeaponName();
+
+
+		auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
+
+		SplayerController->SetSquadControllerInput(false);
+		DisableInput(SplayerController);
+
+		SetHighLight(false);
+
+		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(false);
+		CharAnimInst->Reload_Crouch();
+		/*
+		if (WeaponName == "Rifle") {
+			UGameplayStatics::PlaySoundAtLocation(this, Rifle_Reload_Sound, GetActorLocation(), 0.2f);
+			CharAnimInst->Reload_Rifle();
+		}
+		else if (WeaponName == "Pistol") {
+			UGameplayStatics::PlaySoundAtLocation(this, Pistol_Reload_Sound, GetActorLocation(), 0.2f);
+			CharAnimInst->Reload_Pistol();
+		}
+		else if (WeaponName == "Shotgun") {
+			UGameplayStatics::PlaySoundAtLocation(this, Shotgun_Reload_Sound, GetActorLocation(), 0.2f);
+			CharAnimInst->Reload_Shotgun();
+		}
+		else if (WeaponName == "Sniper") {
+			UGameplayStatics::PlaySoundAtLocation(this, Sniper_Reload_Sound, GetActorLocation(), 0.2f);
+			CharAnimInst->Reload_Sniper();
+		}
+		*/
+		//SetCharacterEnd();
+
+		if (UnderGrid != nullptr)
+			UnderGrid->SetGridInfo_Material_temp2();
+	}
+	//gameIns->BCIns->EndTurnSystem();
+}
+
+void APlayerSquadCharacter::BeReload_BattleOver()
+{
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
+	CurrentAmmo = CharacterStat->GetWeaponMaxFireCount();
+
+	FString WeaponName = CharacterStat->GetCharacterWeaponName();
+
+	if (WeaponName == "Rifle") {
+		UGameplayStatics::PlaySoundAtLocation(this, Rifle_Reload_Sound, GetActorLocation(), 0.2f);
+		//CharAnimInst->Reload_Rifle();
+	}
+	else if (WeaponName == "Pistol") {
+		UGameplayStatics::PlaySoundAtLocation(this, Pistol_Reload_Sound, GetActorLocation(), 0.2f);
+		//CharAnimInst->Reload_Pistol();
+	}
+	else if (WeaponName == "Shotgun") {
+		UGameplayStatics::PlaySoundAtLocation(this, Shotgun_Reload_Sound, GetActorLocation(), 0.2f);
+		//CharAnimInst->Reload_Shotgun();
+	}
+	else if (WeaponName == "Sniper") {
+		UGameplayStatics::PlaySoundAtLocation(this, Sniper_Reload_Sound, GetActorLocation(), 0.2f);
+		//CharAnimInst->Reload_Sniper();
 	}
 
-	SetCharacterEnd();
+	//SetCharacterEnd();
 
-	if(UnderGrid != nullptr)
+	if (UnderGrid != nullptr)
 		UnderGrid->SetGridInfo_Material_temp2();
+
+	//gameIns->BCIns->EndTurnSystem();
 }
 
 ////////////////////////////// Move //////////////////////////////////////////////
 
 void APlayerSquadCharacter::SetMoveReady()
 {
-	StateEnum = EStateEnum::SE_Move;
+	//StateEnum = EStateEnum::SE_Move;
 
 
 }
 
 ////////////////////////////// Cover //////////////////////////////////////////////
 
+void APlayerSquadCharacter::SetCoverReady()
+{
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+
+			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
+				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
+			else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
+				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(false);
+
+			StateEnum = EStateEnum::SE_Cover;
+			Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(false);
+		}
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 4);
+		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+		BW->ChangeSelectedButton(BW->GetCoverButton());
+		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+}
+
 void APlayerSquadCharacter::SetCover()
 {
-	if(StateEnum == EStateEnum::SE_Stay)
-	{
-		UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
-		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false) {
+		if((StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death))
+		{
+			UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+			auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+					
+			Buff_Cover(BuffOn);
 
-		CharAnim->BeCover();
-		Buff_Cover(BuffOn);
-		SetCharacterEnd();
+			SetHighLight(false);
+			if (UnderGrid != nullptr)
+				UnderGrid->SetGridInfo_Material_temp2();
 
-		if (UnderGrid != nullptr)
-			UnderGrid->SetGridInfo_Material_temp2();
-
-		gameIns->BCIns->EndTurnSystem();
+			SetCharacterEnd();		
+		}
 	}
 }
+
+////////////////////////// Stay  ////////////////////////////////////////
 
 void APlayerSquadCharacter::SetStay()
 {
@@ -313,11 +606,113 @@ void APlayerSquadCharacter::SetStay()
 
 }
 
+////////////////////////// SKill ////////////////////////////////////////
+
+void APlayerSquadCharacter::SetSkill1()
+{
+	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false)) {
+		if (Character_Skill1_Cooldown == 0) {
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+				if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
+					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
+				else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
+					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(false);
+				
+				StateEnum = EStateEnum::SE_Skill1;
+				SetHighLight(true);
+				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(true);
+			}
+			
+
+			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 1);
+			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 1);
+			UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+			BW->ChangeSelectedButton(BW->GetSkill1Button());
+			UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+		}
+		else {
+			if (StateEnum == EStateEnum::SE_End) {
+				Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 1);
+				Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 1);
+				UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+			}
+		}
+	}
+	else {
+		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+		BW->ChangeSelectedButton(BW->GetSkill1Button());
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 1);
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 1);
+		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+	}
+}
+
+void APlayerSquadCharacter::SetSkill2()
+{
+	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false )) {
+		if (Character_Skill2_Cooldown == 0) {
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+				if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
+					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
+				else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
+					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(false);
+
+				StateEnum = EStateEnum::SE_Skill2;
+				SetHighLight(true);
+				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(true);
+			}
+				
+
+			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 2);
+			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 2);
+			UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+			BW->ChangeSelectedButton(BW->GetSkill2Button());
+			UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+		}
+		else {
+			if (StateEnum == EStateEnum::SE_End) {
+				Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 2);
+				Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 2);
+				UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+			}
+		}
+	}
+	else {
+		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+		BW->ChangeSelectedButton(BW->GetSkill2Button());
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDataWidgetText_Skill(this, 2);
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 2);
+		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////
+
 void APlayerSquadCharacter::SetCharacterEnd()
 {
-	StateEnum = EStateEnum::SE_End;
-	Cast<ABattleController>((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns))->AddPlayerEndBattleArray(this);
-	UE_LOG(LogClass, Log, TEXT(" Add EndArray " ));
+	if(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true) {
+		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(1.f);
+		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(true);
+		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ClearWidget_SkillPanel();
+		GetStatustBarWidget()->SetBarRenderOpacity(0.5f);
+		StateEnum = EStateEnum::SE_End;
+		//Cast<ABattleController>((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns))->AddPlayerEndBattleArray(this);
+		
+		UE_LOG(LogClass, Log, TEXT(" Add EndArray " ));
+		gameIns->SelectedCharacter = nullptr; // 버그 픽스 추가 04/30
+	
+
+		auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
+		SplayerController->SetSquadControllerInput(true);
+		EnableInput(SplayerController);
+
+		gameIns->BCIns->EndTurnSystem();
+		//Cast<ABattleController>((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns))->AddPlayerEndBattleArray(this);
+	}
+	
 }
 
 float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -326,14 +721,32 @@ float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 
 	if (LifePoint > 0)
 	{
-		if (IsActiveBuffCover == true)
-		{
-			Buff_Cover(BuffOff);
+		if(ActualDamage > 0) {
+			if (IsActiveBuffCover == true)
+			{
+				Buff_Cover(BuffOff);
+			}
+			UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
+			
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true) {
+				CharAnimInst->Hit();
+			}
+			else {
+				if (ActualDamage >= 5) {
+					CharAnimInst->Play_StandHit_1();
+				}
+				else if (CharAnimInst != nullptr)
+				{												
+						int32 tempRand = FMath::FloorToInt(FMath::RandRange(0.f, 1.9f));
+						if (tempRand == 0)
+							CharAnimInst->Play_StandHit_2();
+						else if (tempRand == 1)
+							CharAnimInst->Play_StandHit_3();					
+				}
+			}
 		}
-		UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
-		if (CharAnimInst != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, GetHit_Sound, GetActorLocation(), 1.0f);
+		else if (ActualDamage <= 0) {
+			UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 			CharAnimInst->Hit();
 		}
 	}
@@ -355,13 +768,37 @@ void APlayerSquadCharacter::PlayerDeath(UCharacterAnimInstance* CharAnimInst)
 	//UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	Cast<ABattleController>(gameIns->BCIns)->RemoveFromPlayerEndBattleArray(ArrayNumbering, numbering);
-	Characterdeath(); // �浹 ����, �����Ʈ ���� , ���� ��ȯ
+	Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
 
-	UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
-	CharAnimInst->Death();
+	//UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
+	//FString WeaponName = CharacterStat->GetCharacterWeaponName(); [BUG] 11/13 문제점
 
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true){
+		int32 tempRand = (FMath::RandRange(0.f, 1.9f));
+		if (tempRand == 0)
+			CharAnimInst->CrouchDeath_1();
+		else if (tempRand == 1)
+			CharAnimInst->CrouchDeath_2();
+	}
+	else {
+		int32 tempRand = FMath::FloorToInt(FMath::RandRange(0.f, 5.9f));
+		if (tempRand == 0)
+			CharAnimInst->StandDeath_1();
+		else if (tempRand == 1)
+			CharAnimInst->StandDeath_2();
+		else if (tempRand == 2)
+			CharAnimInst->StandDeath_3();
+		else if (tempRand == 3)
+			CharAnimInst->StandDeath_4();
+		else if (tempRand == 4)
+			CharAnimInst->StandDeath_5();
+		else if (tempRand == 5)
+			CharAnimInst->StandDeath_6();
+	}
+
+	SetHighLight(false);
+	SetHighLight_SelfSkill(false);
 	LifeBar->SetHiddenInGame(true);
-
 }
 
 void APlayerSquadCharacter::PlaySelectedSound()
@@ -384,6 +821,7 @@ void APlayerSquadCharacter::InputTest()
 void APlayerSquadCharacter::SetUnderGrid(AGrid* Grid)
 {
 	UnderGrid = Grid;
+	
 }
 
 AGrid* APlayerSquadCharacter::GetUnderGrid()
@@ -396,22 +834,24 @@ int32 APlayerSquadCharacter::GetBattleLineNumber()
 	return BattleLineNumber;
 }
 
-void APlayerSquadCharacter::Buff_System() // �ӽ÷� �����Ű�� �ý������� ����
+/////////////////////// BUFF ////////////////////////////////
+
+void APlayerSquadCharacter::Buff_System() // 임시로 종료시키는 시스템으로 변경
 {
 	Buff_Cover(BuffOff);
 }
 
 void APlayerSquadCharacter::Buff_Cover(bool Onoff)
 {
-	// �̹� ������������?
-	 // �����ϰ� ����� - ī��Ʈ�� �����?
-	 // ī��Ʈ�� 0�� �ƴҽ� �ƹ��ϵ� ���Ͼ - ���� �߰�����
-	// ������������
-	 // ������ �ϸ� ��
+	// 이미 켜져있을때는?
+	 // 종료하게 만든다 - 카운트가 생기면?
+	 // 카운트가 0가 아닐시 아무일도 안일어남 - 추후 추가예정
+	// 안켜져있을때
+	 // 켜지게 하면 됨
 
-	if (Onoff == BuffOff) // ���� üũ�� - �ӽ÷� ����Ȱ��ȭ�� ������ ���� �Լ��� ����
+	if (Onoff == BuffOff) // 버프 체크용 - 임시로 버프활성화시 버프를 끄는 함수로 변경
 	{
-		if (IsActiveBuffCover == true) // ������ ���������� ����
+		if (IsActiveBuffCover == true) // 버프가 켜져있으면 종료
 		{
 			CharacterDefenceArmor -= 1.f;
 			IsActiveBuffCover = false;
@@ -419,23 +859,310 @@ void APlayerSquadCharacter::Buff_Cover(bool Onoff)
 		}
 		else
 		{
-
+			
 		}
 			//UE_LOG(LogClass, Log, L"Buff Not Active");
-		// ������������ �ƹ��ϵ� ���Ͼ
+		// 꺼저있을때는 아무일도 안일어남
 		
 	}
-	else // Onoff == BuffOn ���� Ȱ��ȭ
+	else // Onoff == BuffOn 버프 활성화
 	{
-		if(IsActiveBuffCover == false) // ������ ��Ȱ��ȭ�� ������ Ȱ��ȭ
+		if(IsActiveBuffCover == false) // 버프가 비활성화시 버프가 활성화
 		{ 
 			CharacterDefenceArmor += 1.f;
 			IsActiveBuffCover = true;
 			//UE_LOG(LogClass, Log, L"Buff On");
 		}
-		else // ������ �̹� Ȱ��ȭ�������� �ƹ��ϵ� ���Ͼ
+		else // 버프가 이미 활성화됬을때는 아무일도 안일어남
 		{
 			//UE_LOG(LogClass, Log, L"Buff Already Active");
 		}
 	}
+}
+
+//////////////////////////////////////////////////////////////
+
+void APlayerSquadCharacter::BeShowMouseCursor()
+{	
+	//GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	GetWorld()->GetFirstPlayerController()->EnableInput(GetWorld()->GetFirstPlayerController());
+}
+
+void APlayerSquadCharacter::BeHideMouseCursor()
+{
+	//GetWorld()->GetFirstPlayerController()->bShowMouseCursor = false;
+	GetWorld()->GetFirstPlayerController()->DisableInput(Cast<APlayerController>(GetWorld()->GetFirstPlayerController()));
+	//GetWorld()->GetFirstPlayerController()->
+}
+
+void APlayerSquadCharacter::Calc_Damage_distribution(ASquadCharacter* TargetEvasionCorrection)
+{
+	// nCr =  n! / (r! * (n-r)!)
+	// 0번 성공 = 10! / ( 0! * ( 10 - 0 ) ! ) * (맞을확률)^0 * (빗나갈확률)^10
+	Damage_distribution.Init(0.f, 11);
+	Damage_distribution_float.Init(0.f, 11);
+
+	for (int i = 0; i <= CharacterStat->GetWeaponFireCount(); i++)
+	{
+		float FinalCal;
+		float maxFireCount = CharacterStat->GetWeaponFireCount();
+		float binomial_coefficient = factorial(maxFireCount) / (factorial(i) * factorial(maxFireCount - i));
+		float hitACC = (CharacterStat->GetCharacterAccuracyCorrectionValue() + CharacterStat->GetWeaponAccuracy() - TargetEvasionCorrection->Evasion) / 100;
+		float nonhitACC = 1 - hitACC;
+
+		FinalCal = binomial_coefficient * FMath::Pow(hitACC, i) * FMath::Pow(nonhitACC, maxFireCount - i);
+
+		
+		auto damageNum = i * CharacterStat->GetWeaponDamage();
+		Damage_distribution_float[damageNum] = FinalCal;
+		FinalCal = FMath::RoundToFloat(FinalCal * 100);
+		Damage_distribution[damageNum] = FinalCal;
+		
+		if (MaxDamage_InDamageDis < FinalCal)
+			MaxDamage_InDamageDis = FinalCal;
+
+	
+	}
+	
+
+
+	// 구해진건 몇번 맞출 확률
+	// 구해야하는건 데미지
+}
+
+void APlayerSquadCharacter::Calc_SkillDamage_distribution(ASquadCharacter* Target, struct FSkillValueList* CompSkillData)
+{
+
+	SkillDamage_distribution.Init(0.f, 11);
+	SkillDamage_distribution_float.Init(0.f, 11);
+
+	// 최대 발사 수 , 정확도 , 
+	int32 Skill_ShotCount = CompSkillData->SkillFireCount;
+	int32 Skill_BulletDamage = CompSkillData->SkillDamage;
+	int32 Skill_BulletCount = CompSkillData->SkillBulletCount;
+	int32 Skill_AccuracyCorrections = CompSkillData->Special_ability_1_UsedCharacterAccurancyrateCorrectionValue;	
+	int32 Skill_DefenseValue = Target->Defense;
+	int32 Skill_CritValue = CompSkillData->Special_ability_2_UsedCharacterCriticalCorrectionValue;
+
+	for (int i = 0; i <= Skill_BulletCount; i++)
+	{
+		float FinalCal;
+		float maxFireCount = Skill_BulletCount;
+		float binomial_coefficient = factorial(maxFireCount) / (factorial(i) * factorial(maxFireCount - i));
+		float SumAcc = (CharacterStat->GetWeaponAccuracy() + CharacterStat->GetCharacterAccuracyCorrectionValue() + (float)Skill_AccuracyCorrections - Target->Evasion);
+			if (SumAcc > 100) SumAcc = 100.f;
+			else if (SumAcc < 0) SumAcc = 0.f;
+		float hitACC = SumAcc / 100;
+		float nonhitACC = 1 - hitACC;
+
+		FinalCal = binomial_coefficient * FMath::Pow(hitACC, i) * FMath::Pow(nonhitACC, maxFireCount - i);
+
+
+		auto damageNum = i * Skill_BulletDamage;
+		SkillDamage_distribution_float[damageNum] = FinalCal;
+		FinalCal = FMath::RoundToFloat(FinalCal * 100);
+		SkillDamage_distribution[damageNum] = FinalCal;
+
+		if (SkillMaxDamage_InDamageDis < FinalCal)
+			SkillMaxDamage_InDamageDis = FinalCal;
+	}
+}
+
+int APlayerSquadCharacter::factorial(int n)
+{
+	if (n <= 1)
+		return 1;
+	else
+		return n * factorial(n - 1);
+}
+
+////////////
+
+void APlayerSquadCharacter::SetHighLight(bool OnOff)
+{
+	GetMesh()->SetRenderCustomDepth(OnOff);
+	Cap->SetRenderCustomDepth(OnOff);
+	Cap_equip->SetRenderCustomDepth(OnOff);
+	Head_equip1->SetRenderCustomDepth(OnOff);
+	Head_equip2->SetRenderCustomDepth(OnOff);
+	Shirt->SetRenderCustomDepth(OnOff);
+	Pants->SetRenderCustomDepth(OnOff);
+	Boots->SetRenderCustomDepth(OnOff);
+	Hands->SetRenderCustomDepth(OnOff);
+	Vest->SetRenderCustomDepth(OnOff);
+	Vest_outfit->SetRenderCustomDepth(OnOff);
+	Backpack->SetRenderCustomDepth(OnOff);
+	Backpack2->SetRenderCustomDepth(OnOff);
+	Vest_Collar->SetRenderCustomDepth(OnOff);;
+	Vest_shoulder_R->SetRenderCustomDepth(OnOff);
+	Vest_shoulder_L->SetRenderCustomDepth(OnOff);
+	Vest_Bottom->SetRenderCustomDepth(OnOff);
+	Decals->SetRenderCustomDepth(OnOff);
+	Radio->SetRenderCustomDepth(OnOff);
+	Kneepad_R->SetRenderCustomDepth(OnOff);
+	Kneepad_L->SetRenderCustomDepth(OnOff);
+	Holster->SetRenderCustomDepth(OnOff);
+	WeaponSlot->SetRenderCustomDepth(OnOff);
+
+	GetMesh()->SetCustomDepthStencilValue(1);
+	Cap->SetCustomDepthStencilValue(1);
+	Cap_equip->SetCustomDepthStencilValue(1);
+	Head_equip1->SetCustomDepthStencilValue(1);
+	Head_equip2->SetCustomDepthStencilValue(1);
+	Shirt->SetCustomDepthStencilValue(1);
+	Pants->SetCustomDepthStencilValue(1);
+	Boots->SetCustomDepthStencilValue(1);
+	Hands->SetCustomDepthStencilValue(1);
+	Vest->SetCustomDepthStencilValue(1);
+	Vest_outfit->SetCustomDepthStencilValue(1);
+	Backpack->SetCustomDepthStencilValue(1);
+	Backpack2->SetCustomDepthStencilValue(1);
+	Vest_Collar->SetCustomDepthStencilValue(1);;
+	Vest_shoulder_R->SetCustomDepthStencilValue(1);
+	Vest_shoulder_L->SetCustomDepthStencilValue(1);
+	Vest_Bottom->SetCustomDepthStencilValue(1);
+	Decals->SetCustomDepthStencilValue(1);
+	Radio->SetCustomDepthStencilValue(1);
+	Kneepad_R->SetCustomDepthStencilValue(1);
+	Kneepad_L->SetCustomDepthStencilValue(1);
+	Holster->SetCustomDepthStencilValue(1);
+	WeaponSlot->SetCustomDepthStencilValue(1);
+
+}
+
+void APlayerSquadCharacter::SetHighLight_SelfSkill(bool OnOff)
+{
+	GetMesh()->SetRenderCustomDepth(OnOff);
+	Cap->SetRenderCustomDepth(OnOff);
+	Cap_equip->SetRenderCustomDepth(OnOff);
+	Head_equip1->SetRenderCustomDepth(OnOff);
+	Head_equip2->SetRenderCustomDepth(OnOff);
+	Shirt->SetRenderCustomDepth(OnOff);
+	Pants->SetRenderCustomDepth(OnOff);
+	Boots->SetRenderCustomDepth(OnOff);
+	Hands->SetRenderCustomDepth(OnOff);
+	Vest->SetRenderCustomDepth(OnOff);
+	Vest_outfit->SetRenderCustomDepth(OnOff);
+	Backpack->SetRenderCustomDepth(OnOff);
+	Backpack2->SetRenderCustomDepth(OnOff);
+	Vest_Collar->SetRenderCustomDepth(OnOff);;
+	Vest_shoulder_R->SetRenderCustomDepth(OnOff);
+	Vest_shoulder_L->SetRenderCustomDepth(OnOff);
+	Vest_Bottom->SetRenderCustomDepth(OnOff);
+	Decals->SetRenderCustomDepth(OnOff);
+	Radio->SetRenderCustomDepth(OnOff);
+	Kneepad_R->SetRenderCustomDepth(OnOff);
+	Kneepad_L->SetRenderCustomDepth(OnOff);
+	Holster->SetRenderCustomDepth(OnOff);
+	WeaponSlot->SetRenderCustomDepth(OnOff);
+
+	GetMesh()->SetCustomDepthStencilValue(3);
+	Cap->SetCustomDepthStencilValue(3);
+	Cap_equip->SetCustomDepthStencilValue(3);
+	Head_equip1->SetCustomDepthStencilValue(3);
+	Head_equip2->SetCustomDepthStencilValue(3);
+	Shirt->SetCustomDepthStencilValue(3);
+	Pants->SetCustomDepthStencilValue(3);
+	Boots->SetCustomDepthStencilValue(3);
+	Hands->SetCustomDepthStencilValue(3);
+	Vest->SetCustomDepthStencilValue(3);
+	Vest_outfit->SetCustomDepthStencilValue(3);
+	Backpack->SetCustomDepthStencilValue(3);
+	Backpack2->SetCustomDepthStencilValue(3);
+	Vest_Collar->SetCustomDepthStencilValue(3);;
+	Vest_shoulder_R->SetCustomDepthStencilValue(3);
+	Vest_shoulder_L->SetCustomDepthStencilValue(3);
+	Vest_Bottom->SetCustomDepthStencilValue(3);
+	Decals->SetCustomDepthStencilValue(3);
+	Radio->SetCustomDepthStencilValue(3);
+	Kneepad_R->SetCustomDepthStencilValue(3);
+	Kneepad_L->SetCustomDepthStencilValue(3);
+	Holster->SetCustomDepthStencilValue(3);
+	WeaponSlot->SetCustomDepthStencilValue(3);
+
+}
+
+void APlayerSquadCharacter::SetTurnOnHighLightGrid()
+{
+
+}
+
+void APlayerSquadCharacter::SetTurnOffHighLightGrid()
+{
+	if (UnderGrid != nullptr)
+		UnderGrid->SetGridInfo_Material_temp2();
+}
+
+//////////// 스킬 /////////////////
+
+void APlayerSquadCharacter::SetPlayerSkill_ClassNum(int32 ClassNum)
+{
+	CharacterSkillComp->SetCharacterData(ClassNum, this);
+	CharacterSkillComp->InitCharacterSkill();
+}
+
+void APlayerSquadCharacter::SetSkillNumAndTarget(int32 skillNum, AActor* TargetCharacter)
+{
+	this->skillNum = skillNum;
+	this->SkillTargetCharacter = TargetCharacter;
+	tempTargetCharacter = Cast<ASquadCharacter>(TargetCharacter);
+	UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+
+	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(0.5f);
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(false);
+
+	IsCharacterUseAttack = true;
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(false);
+	CharAnim->Play_SkillReadyMontage();
+
+}
+
+void APlayerSquadCharacter::UsePlayerSkill(int32 skillNum, AActor* TargetCharacter)
+{
+	UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
+	FString WeaponName = CharacterStat->GetCharacterWeaponName();
+	
+	
+
+	if (WeaponName == "Rifle") {
+		
+		CharAnim->Play_SkillFiringMontage();
+	}
+	else if (WeaponName == "Pistol") {
+		
+		CharAnim->Play_SkillFiringMontage();
+	}
+	else if (WeaponName == "Shotgun") {
+		
+		CharAnim->Play_SkillFireMontage();
+	}
+	else if (WeaponName == "Sniper") {
+		
+		CharAnim->Play_SkillFireMontage();
+	}
+	//CharAnim->Play_SkillFiringMontage();
+
+	CharacterSkillComp->UseCharacterSkill(this->skillNum, this->SkillTargetCharacter);
+
+	
+	
+	this->skillNum = NULL;
+	this->SkillTargetCharacter = nullptr;
+	//SetCharacterEnd();// 임시
+}
+
+
+
+
+/////////////////////////////////////
+
+void APlayerSquadCharacter::DebugMessage_CharacterState()
+{
+}
+
+void APlayerSquadCharacter::SetIsCharacterUseAttackTotrue()
+{
+	IsCharacterUseAttack = false;
+	tempTargetCharacter = nullptr;
 }

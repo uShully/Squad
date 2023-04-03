@@ -15,7 +15,7 @@
 
 ASGTestGameMode::ASGTestGameMode()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/DevFile/SquadCameraManager.SquadCameraManager_C'"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("Blueprint'/Game/BLUEPRINT/SquadCameraManager.SquadCameraManager_C'"));
 	if (PlayerPawnBPClass.Class)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
@@ -25,25 +25,25 @@ ASGTestGameMode::ASGTestGameMode()
 		DefaultPawnClass = nullptr;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> BattleStartWidget(L"WidgetBlueprint'/Game/DevFile/Widget/BattleWidget.BattleWidget_C'");
+	static ConstructorHelpers::FClassFinder<UUserWidget> BattleStartWidget(L"WidgetBlueprint'/Game/UI/BattleWidget.BattleWidget_C'");
 	if (BattleStartWidget.Succeeded())
 	{
 		BattleStartWidgetClass = BattleStartWidget.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> DecisionWidget(L"WidgetBlueprint'/Game/DevFile/Widget/DecisionWidget.DecisionWidget_C'");
+	static ConstructorHelpers::FClassFinder<UUserWidget> DecisionWidget(L"WidgetBlueprint'/Game/UI/DecisionWidget.DecisionWidget_C'");
 	if (DecisionWidget.Succeeded())
 	{
 		DecisionWidgetClass = DecisionWidget.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> VictoryWidget(L"WidgetBlueprint'/Game/DevFile/VictoryWidgetBP.VictoryWidgetBP_C'");
+	static ConstructorHelpers::FClassFinder<UUserWidget> VictoryWidget(L"WidgetBlueprint'/Game/UI/VictoryWidgetBP.VictoryWidgetBP_C'");
 	if (VictoryWidget.Succeeded())
 	{
 		VictoryWidgetClass = VictoryWidget.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> DefeatWidget(L"WidgetBlueprint'/Game/DevFile/DefeatWidgetBP.DefeatWidgetBP_C'");
+	static ConstructorHelpers::FClassFinder<UUserWidget> DefeatWidget(L"WidgetBlueprint'/Game/UI/DefeatWidgetBP.DefeatWidgetBP_C'");
 	if (DefeatWidget.Succeeded())
 	{
 		DefeatWidgetClass = DefeatWidget.Class;

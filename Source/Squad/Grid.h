@@ -71,9 +71,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 private:
 
@@ -118,9 +115,11 @@ public:
 
 	void SetGridInfo_Material();
 	//
-	void SetGridInfo_Material_temp();
-	void SetGridInfo_Material_temp2();
-	void SetGridInfo_Material_temp3();
+	void SetGridInfo_Material_InitInfo();
+	void SetGridInfo_Material_Black();
+	void SetGridInfo_Material_Red();
+	void SetGridInfo_Material_Blue();
+	void SetGridInfo_Material_Green();
 	//
 
 	int GetXPos();

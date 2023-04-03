@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Components/TimeLineComponent.h"
 #include "SquadAIController.generated.h"
 
 /**
@@ -42,7 +43,26 @@ public:
 
 	void PlayerCharacter_SpreadOut();
 
-	TArray<AActor*> FrindlyCharacterList;
+	TArray<AActor*> AliveFrindlyCharacterList;
+
+	UFUNCTION()
+	void Simple(FAIRequestID RequestID, EPathFollowingResult::Type Result);
+
+	void DebugFuc();
+
+	bool testbool = false;
+
+public:
+	UPROPERTY()
+		UCurveVector* Curve1;
+	UPROPERTY()
+		UCurveVector* Curve2;
+
+	FTimeline LerpTimeline;
+
+	UPROPERTY()
+		float LerpTimelineLegth;
+
 
 private:
 

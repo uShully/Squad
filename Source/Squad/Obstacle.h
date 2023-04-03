@@ -36,4 +36,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Coordinate")
 		int32 YPos;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		FVector ObstacleCollectionValue;
+
 };

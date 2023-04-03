@@ -10,9 +10,11 @@ void UFloatingTextWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 
-	
-	DisplayText->SetText(FText::FromString(FString::FromInt(TakenDamage)));
-	
+	if (TakenDamage > 0)
+		DisplayText->SetText(FText::FromString(FString::FromInt(TakenDamage)));
+	else if (TakenDamage <= 0)
+		DisplayText->SetText(FText::FromString(TEXT("Miss")));
+
 	PlayAnimation(FloatingAnim);
 		
 }

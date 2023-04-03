@@ -58,26 +58,26 @@ public:
 
 	void ChangeArmLeght(float DeltaTime);
 	void zoomswitch();
+	void SetUnitMovement_Delay(int32 num);
 	bool ZoomBool = false;
 
 	bool MoveSwitch = false;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-		float MaxTargetArmLength;
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-		float minTargetArmLength;
+	
 
 	///////////////////////// Temp Value /////////////////////
 
 
-	void Control_PlayerCharacterMovement(bool TorF);
+	void Control_PlayerCharacterMovement(bool Switch);
 	bool ControlValue_PlayerCharacterMovement = true;
+	bool ControlValue_PlayerCharacterMovement_BeginPlay = true;
 
-	void Control_CameraMovement();
+	void Control_CameraMovement(bool Switch);
 	bool ControlValue_CameraMovement = false;
 
 	void Control_SetBattleInit(FVector Loc);
+
+	void Control_SetExploreInit(FVector Loc);
 
 	void Control_SetBattleCameraLocation(float DeltaTime);
 
@@ -95,15 +95,64 @@ public:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class UBoxComponent* BoxColiision;
+	class UBoxComponent* UnitPos_First;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UBoxComponent* UnitPos_Last;
+
+	UPROPERTY()
+		bool UnitPos_Check_First = false;
+	UPROPERTY()
+		bool UnitPos_Check_Last = false;
+	UPROPERTY()
+		bool UnitPos_Init = false;
+
+
+	UFUNCTION()
+		void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	
+
+	UFUNCTION()
+		void SetUnitPos_Last_Location(int32 number);
+
+	
+
 
 	FRotator ExploreRot;
 	FRotator BattleRot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
 		float ExplorePitch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float ExploreYaw = -180.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float ExploreRoll  = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
 		float BattlePitch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float BattleYaw = -180.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float BattleRoll = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float MaxTargetArmLength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float minTargetArmLength;
+
+	//UPROPERTY()
+	//	TSubclassOf<class APlayerSquadCharacter> Character_temp;
+	
+	FVector UnitPos_First_RelativeLocation;
+	FVector UnitPos_Last_RelativeLocation;
+
+	FVector EventSpotOverlapLocation_First;
+	FVector EventSpotOverlapLocation_Last;
+	void EventSpotOverlapLocation_Save();
+
+	private:
+		class ASquadController* SplayerController;
 
 };

@@ -34,6 +34,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "UMG_Game")
 	void ChangeMenuWidget(TSubclassOf<UUserWidget> NewWidgetClass);
 
+	void RemoteCooldown();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UMG_Game")
 	TSubclassOf<UUserWidget> CrossRoadWidgetClass;
 

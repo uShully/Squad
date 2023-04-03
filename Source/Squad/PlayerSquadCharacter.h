@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -9,8 +9,23 @@
 #include "Sound/SoundCue.h"
 #include "Sound/SoundBase.h"
 //#include "Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "StatusBarWidget.h"
 #include "PlayerSquadCharacter.generated.h"
 
+////////////////////////////////////////////////////////////////
+//					ClassNumer Brunch			              //
+//														      //
+//						0 = RifleMan	 			          //
+//						1 = Deminer		 	 				  //
+//						2 = NULL				              //
+//						3 = Police			                  //
+//						4 = medic			                  //
+//						5 = assault		                      //
+//						6 = ranger		                      //
+//						7 = Sniper						      //
+//						8 = scout							  //
+//													          //
+////////////////////////////////////////////////////////////////
 /**
  * 
  */
@@ -21,7 +36,15 @@ class SQUAD_API APlayerSquadCharacter : public ASquadCharacter
 
 	APlayerSquadCharacter();
 
-public:
+private:
+
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	
+
+public:	
+
+	void InitCharacterStat();
 
 	void SetSkeletalMeshComp(USkeletalMesh* Head, USkeletalMesh* Cap, USkeletalMesh* Cap_equip
 							, USkeletalMesh* Head_equip1 , USkeletalMesh* Head_equip2, USkeletalMesh* Shirt
@@ -30,10 +53,13 @@ public:
 							, USkeletalMesh* Vest_shoulder_R, USkeletalMesh* Vest_shoulder_L , USkeletalMesh* Vest_bottom , USkeletalMesh* Decals
 							, USkeletalMesh* Radio, USkeletalMesh* Kneepad_R, USkeletalMesh* Kneepad_L, USkeletalMesh* Holster);
 
-public:
+public:	 
 
 	void SetShotReady();
 	void Debug_Shot(ASquadCharacter* Target);
+
+	UFUNCTION(BlueprintCallable)
+	void BeShot();
 
 	void SetMoveReady();
 
@@ -41,10 +67,16 @@ public:
 
 	void PlayerDeath(class UCharacterAnimInstance* CharAnimInst);
 
+	void SetCoverReady();
+
 	void SetCover();
 
 	void SetStay();
+	void SetSkill1();
+	void SetSkill2();
 
+
+	UFUNCTION(BlueprintCallable, Category = "TurnSystem")
 	void SetCharacterEnd();
 	
 	void PlaySelectedSound();
@@ -65,10 +97,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
 	int32 BattleLineNumber;
 
-	// πˆ«¡ Ω√Ω∫≈€ √ ±‚
+	// Î≤ÑÌîÑ ÏãúÏä§ÌÖú Ï¥àÍ∏∞
 
 	void Buff_System();
 	void Buff_Cover(bool OnOff);
+
+	UFUNCTION(BlueprintCallable)
+	void BeShowMouseCursor();
+	UFUNCTION(BlueprintCallable)
+	void BeHideMouseCursor();
 
 	bool IsActiveBuffCover = false;
 
@@ -87,20 +124,21 @@ public:
 
 protected:
 
-	// ø¿µø¿ ¡§∏Æ « ø‰
+	// Ïò§ÎîîÏò§ Ï†ïÎ¶¨ ÌïÑÏöî
 	/*
 	UAudioComponent* AudioComp;
 	UAudioComponent* AudioComp_Hit;
 	*/
 	USoundBase* Fire_Sound;
+
 	USoundBase* GetHit_Sound;
 	USoundBase* Death_Sound;
 
-	//UParticleSystemComponent* ParticleSystem;
-
-	
 	USoundBase* Selected_Sound;
-	class AGrid* UnderGrid;
+
+	// Ï¥ùÍ∏∞ Ïò§ÎîîÏò§ 
+	
+	ASquadCharacter* tempTargetCharacter = nullptr;
 
 public:
 	
@@ -147,6 +185,73 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USkeletalMeshComponent*	Holster;
 
+
+	void SetFXSound(const TCHAR* HitSoundContentPath, const TCHAR* DeadSoundConentPath);
 	void SetContentMesh(USkeletalMeshComponent* mesh, const TCHAR* ContentPath);
+	void SetContentMeshMat(USkeletalMeshComponent * mesh, const TCHAR * ContentPath, int32 MatIndex = 0);
+	
 	void SetWeaponMesh();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
+	class USkeletalMeshComponent* WeaponSlot;
+
+	public:
+
+	//UPROPERTY(EditAnywhere)
+	//	float CurrentAmmo;
+
+		void SetReloadReady();
+
+		void BeReload();
+
+		void BeReload_BattleOver();
+
+		void Calc_Damage_distribution(ASquadCharacter* TargetEvasionCorrection);
+		TArray<float> Damage_distribution;
+		TArray<float> Damage_distribution_float;
+		float MaxDamage_InDamageDis = 0.f;
+
+		int factorial(int n);
+
+		void Calc_SkillDamage_distribution(ASquadCharacter* Target, struct FSkillValueList* CompSkillData);
+		TArray<float> SkillDamage_distribution;
+		TArray<float> SkillDamage_distribution_float;
+		float SkillMaxDamage_InDamageDis = 0.f;
+
+	//
+
+		UFUNCTION()
+			void SetHighLight(bool OnOff);
+
+		void SetHighLight_SelfSkill(bool OnOff);
+
+		UFUNCTION()
+			void SetTurnOnHighLightGrid();
+		UFUNCTION()
+			void SetTurnOffHighLightGrid();
+	
+		public:
+
+			class USquadCharacterSkillComponent* CharacterSkillComp;
+
+
+			UFUNCTION()
+				void SetPlayerSkill_ClassNum(int32 ClassNum);
+
+			void SetSkillNumAndTarget(int32 skillNum, AActor * TargetCharacter);
+			int32 skillNum = 0;
+			AActor* SkillTargetCharacter;
+
+			UFUNCTION(BlueprintCallable)
+				void UsePlayerSkill(int32 skillNum, AActor* TargetCharacter);
+
+
+			void DebugMessage_CharacterState();
+			bool IsCharacterUseAttack = false;
+
+			UFUNCTION(BlueprintCallable)
+				void SetIsCharacterUseAttackTotrue();
+
+			UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+			bool SpreadOutDirection= true; // trueÎ©¥ ÏôºÏ™Ω false Ïò§Î•∏Ï™Ω
 };

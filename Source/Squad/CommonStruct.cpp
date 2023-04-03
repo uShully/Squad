@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "CommonStruct.h"
 #include "UObject/ConstructorHelpers.h"
@@ -29,6 +29,8 @@ void ACommonStruct::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+
 
 /*
 void ACommonStruct::Class_0_Mesh_Load()
