@@ -950,7 +950,7 @@ void UBattleWidget::SetDamageMarkerColor(UTextBlock* DamageText, float per, floa
 		DamageText->SetColorAndOpacity(Red); // 빨강색
 
 	
-	if(per_float == 0.f) {
+	if(per_float <= 0.f) {
 		DamageText->SetText(FText::FromString(TEXT("-")));
 		DamageText->SetColorAndOpacity(White);
 	}
@@ -1173,11 +1173,11 @@ void UBattleWidget::Set_BattleWidgetSkilliconOpacity(bool Active)
 		Skill4ButtonImage->SetColorAndOpacity(FLinearColor(0.9f, 0.9f, 0.9f, 1.0f));
 
 
-		Skill1CooldownMarker->SetVisibility(ESlateVisibility::Visible);
-		Skill1CooldownValue->SetVisibility(ESlateVisibility::Visible);
+		Skill1CooldownMarker->SetVisibility(ESlateVisibility::HitTestInvisible);
+		Skill1CooldownValue->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-		Skill2CooldownMarker->SetVisibility(ESlateVisibility::Visible);
-		Skill2CooldownValue->SetVisibility(ESlateVisibility::Visible);
+		Skill2CooldownMarker->SetVisibility(ESlateVisibility::HitTestInvisible);
+		Skill2CooldownValue->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	}
 	else {

@@ -440,6 +440,7 @@ void ABattleController::BeCheck()
 			Cast<ASquadGameMode>(gameMode)->ChangeSubWidget(Cast<ASquadGameMode>(gameMode)->GetVictoryWidgetClass());
 			Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText_Right();
 			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->Target_Explorer = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
+			
 		}
 		//ResultBattle();
 
@@ -676,26 +677,26 @@ void ABattleController::ResultBattle()
 void ABattleController::ResultBattle_temp()
 {
 	if(IsBattleStart == true) { 
-		for (int i = 0; i < FriendlyCharacters.Num(); i++) {
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->BeReload_BattleOver();
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-		}
 
 		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
 
 		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 		{
+			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->BeReload_BattleOver();
+			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
+			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->Clear_CCArray();
+
+			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetCharacterMovement()->MaxWalkSpeed = 200.f;
+			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetCharacterMovement()->MaxAcceleration = 150.f;
+
 			auto anim = Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->animInstance;
 			Cast<UCharacterAnimInstance>(anim)->Set_IsBattle(false);
 			Cast<UCharacterAnimInstance>(anim)->Call_GetIsBattle();
 		}
+
 		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 		//Cast<USquadGameInstance>(gameIns)->SCMIns->ControlValue_PlayerCharacterMovement_BeginPlay = true;
 
-		for (int32 i = 0; i < FriendlyCharacters.Num(); i++) {
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetCharacterMovement()->MaxWalkSpeed = 200.f;
-			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetCharacterMovement()->MaxAcceleration = 150.f;
-		}
 
 		gameIns->SCMIns->SetUnitPos_Last_Location(gameIns->SCMIns->FriendlyCharList.Num());
 

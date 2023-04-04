@@ -7,10 +7,10 @@
 AGrid::AGrid()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Plane"));
-	Plane->SetupAttachment(RootComponent);
+	SetRootComponent(Plane);
 
 	/*
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>Plane_Body(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane'"));
@@ -54,6 +54,12 @@ AGrid::AGrid()
 	if (M_Obstacle.Object != NULL)
 	{
 		ObstacleMaterial = (UMaterial*)M_Obstacle.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> M_TRANSPARENCY(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_transparency.M_transparency'"));
+	if(M_TRANSPARENCY.Succeeded())
+	{
+		TransparencyMaterial = (UMaterial*)M_TRANSPARENCY.Object;
 	}
 	
 }
@@ -153,16 +159,6 @@ void AGrid::SetGridInfo_Material_Blue()
 void AGrid::SetGridInfo_Material_Green()
 {
 	Plane->SetMaterial(0, GreenMaterial);
-}
-
-int AGrid::GetXPos()
-{
-	return XPos;
-}
-
-int AGrid::GetYPos()
-{
-	return YPos;
 }
 
 void AGrid::DeleteGrid()

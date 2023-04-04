@@ -908,6 +908,7 @@ void APlayerSquadCharacter::Calc_Damage_distribution(ASquadCharacter* TargetEvas
 		float maxFireCount = CharacterStat->GetWeaponFireCount();
 		float binomial_coefficient = factorial(maxFireCount) / (factorial(i) * factorial(maxFireCount - i));
 		float hitACC = (CharacterStat->GetCharacterAccuracyCorrectionValue() + CharacterStat->GetWeaponAccuracy() - TargetEvasionCorrection->Evasion) / 100;
+		if (hitACC > 100.f) hitACC = 100.f;
 		float nonhitACC = 1 - hitACC;
 
 		FinalCal = binomial_coefficient * FMath::Pow(hitACC, i) * FMath::Pow(nonhitACC, maxFireCount - i);
@@ -916,6 +917,8 @@ void APlayerSquadCharacter::Calc_Damage_distribution(ASquadCharacter* TargetEvas
 		auto damageNum = i * CharacterStat->GetWeaponDamage();
 		Damage_distribution_float[damageNum] = FinalCal;
 		FinalCal = FMath::RoundToFloat(FinalCal * 100);
+		if (FinalCal > 100) FinalCal = 100;
+		else if (FinalCal < 0) FinalCal = 0;
 		Damage_distribution[damageNum] = FinalCal;
 		
 		if (MaxDamage_InDamageDis < FinalCal)
@@ -953,6 +956,7 @@ void APlayerSquadCharacter::Calc_SkillDamage_distribution(ASquadCharacter* Targe
 			if (SumAcc > 100) SumAcc = 100.f;
 			else if (SumAcc < 0) SumAcc = 0.f;
 		float hitACC = SumAcc / 100;
+		if (hitACC > 100.f) hitACC = 100.f;
 		float nonhitACC = 1 - hitACC;
 
 		FinalCal = binomial_coefficient * FMath::Pow(hitACC, i) * FMath::Pow(nonhitACC, maxFireCount - i);
@@ -961,6 +965,8 @@ void APlayerSquadCharacter::Calc_SkillDamage_distribution(ASquadCharacter* Targe
 		auto damageNum = i * Skill_BulletDamage;
 		SkillDamage_distribution_float[damageNum] = FinalCal;
 		FinalCal = FMath::RoundToFloat(FinalCal * 100);
+		if (FinalCal > 100) FinalCal = 100;
+		else if (FinalCal < 0) FinalCal = 0;
 		SkillDamage_distribution[damageNum] = FinalCal;
 
 		if (SkillMaxDamage_InDamageDis < FinalCal)

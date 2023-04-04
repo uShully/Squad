@@ -11,13 +11,8 @@ AObstacle::AObstacle()
 	PrimaryActorTick.bCanEverTick = true;
 
 	StaticComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TempShape"));
-	StaticComp->SetupAttachment(RootComponent);
+	SetRootComponent(StaticComp);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>Temp_Body(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'"));
-	if (Temp_Body.Succeeded())
-	{
-		StaticComp->SetStaticMesh(Temp_Body.Object);
-	}
 	
 	
 	//StaticMesh'/Engine/BasicShapes/Cube.Cube'

@@ -445,3 +445,8 @@ void ASquadCharacter::Calc_CCArray_Data()
 {
 	//if (CCArray.Num() > 0)
 }
+
+void ASquadCharacter::Clear_CCArray()
+{
+	CCArray.Empty();
+}

@@ -37,6 +37,8 @@ class SQUAD_API AGrid : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Grid, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Plane;
 
+protected:
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Color, meta = (AllowPrivateAccess = "true"))
 	UMaterial* WhiteMaterial;
 
@@ -54,7 +56,12 @@ class SQUAD_API AGrid : public AActor
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Color, meta = (AllowPrivateAccess = "true"))
 	UMaterial* ObstacleMaterial;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Color, meta = (AllowPrivateAccess = "true"))
+	UMaterial* 	TransparencyMaterial;
+
 	/*
+
 	UMaterialInstanceDynamic* ExampleMID = UMaterialInstanceDynamic::Create(UMaterialInterface* Exp, )
 	ExampleStaticMesh->SetMaterial(ExampleMID, 0);  
 	FLinearColor Red(FLineaerColor::Red);  
@@ -122,9 +129,6 @@ public:
 	void SetGridInfo_Material_Green();
 	//
 
-	int GetXPos();
-	int GetYPos();
-	
 
 	UFUNCTION()
 	void DeleteGrid();

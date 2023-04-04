@@ -299,6 +299,8 @@ public:
 		void Control_CCArray();
 		void Calc_CCArray_Data();
 
+		void Clear_CCArray();
+
 	public:
 		FRotator Character_Rotator_StartRotator;
 		bool Character_BattleRotator_Start = false;

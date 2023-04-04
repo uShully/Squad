@@ -13,12 +13,12 @@
 AGridManager::AGridManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	BoxColiision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxColiision->SetBoxExtent(FVector(32.f, 32.f, 5.f));
 	BoxColiision->SetCollisionProfileName("BoxTrigger");
-	BoxColiision->SetupAttachment(RootComponent);
+	SetRootComponent(BoxColiision);
 }
 
 // Called when the game starts or when spawned
