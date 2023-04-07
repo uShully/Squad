@@ -81,12 +81,11 @@ protected:
 
 	//class AGrid* UnderGrid;
 public:
-	void TestLog();
 
 	FTimerHandle WaitHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
 	float WaitTime;
-
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "GameSetting")
 	int32 ArrayNumbering;
 
 	AActor* ShotTarget;
@@ -126,4 +125,10 @@ public:
 
 	bool IsCharacterUseAttack = false;
 	class ASquadCharacter* tempTargetCharacter;
+
+	private:
+		bool bIsHighLight = false;
+		void SetbIsHighLight(bool OnOff) { bIsHighLight = OnOff; };
+	public:
+		bool GetbIsHighLight() { return bIsHighLight; };
 };

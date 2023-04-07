@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Squad.h"
 #include "GameFramework/Actor.h"
 #include "SquadCharacter.h"
 #include "PlayerSquadCharacter.h"
@@ -17,10 +17,13 @@ UCLASS()
 class SQUAD_API ABattleController : public AActor
 {
 	GENERATED_BODY()
-	
+
+		ABattleController();
+
+	virtual void PostInitializeComponents() override;
 public:	
 	// Sets default values for this actor's properties
-	ABattleController();
+	
 
 	void InitBattleSetting(TArray<AActor*> EnemyList, AActor* triggerBox);
 	ABattleTrigger* pTriggerBox = nullptr;
@@ -53,11 +56,11 @@ public:
 
 	//
 
-	void RemoveFromPlayerEndBattleArray(int32 ArrayNumbering ,int32 Numbering);
+	void RemoveFromPlayerEndBattleArray(AActor* RemoveUnit);
 
 	void AddPlayerEndBattleArray(AActor * Actor);
 	
-	void RemoveFromEnemyEndBattleArray(int32 ArrayNumbering);
+	void RemoveFromEnemyEndBattleArray(AActor* RemoveUnit);
 	void ResetPlayerEndBattleArray();
 
 	//
@@ -65,7 +68,7 @@ public:
 	void EndTurnSystem_Enemy();
 
 
-	void SetEnd();
+
 
 	void SetSelectedCharacter(ASquadCharacter* SelectedCharacter);
 	void ClearSelectedCharacter();

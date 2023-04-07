@@ -254,4 +254,15 @@ public:
 
 			UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 			bool SpreadOutDirection= true; // true면 왼쪽 false 오른쪽
+
+			private:
+				bool bIsHighLight = false;
+				void SetbIsHighLight(bool OnOff) { bIsHighLight = OnOff; };
+
+				bool bIsSelfHighLight = false;
+				void SetbIsSelfHighLight(bool OnOff) { bIsSelfHighLight = OnOff; };
+			public:
+
+				bool GetbIsHighLight() { return bIsHighLight; };
+				bool GetbIsSelfHighLight() { return bIsSelfHighLight; };
 };

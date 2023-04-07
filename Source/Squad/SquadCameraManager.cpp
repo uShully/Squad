@@ -117,6 +117,7 @@ void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			
 			auto gameIns = GetWorld()->GetGameInstance();			
 		
+			SplayerController->SetBattleController();
 			SplayerController->SetSelectedCharacterInfo();
 			SplayerController->Target_Explorer = Cast<APlayerSquadCharacter>(Cast<USquadGameInstance>(gameIns)->BCIns->GetSelectedCharacter());
 

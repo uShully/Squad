@@ -249,7 +249,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Status")
 		float Defense = 0.f;
 
-	UPROPERTY(EditAnywhere, Category = "Status")
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly , Category = "Status")
 		bool IsStun = false;
 
 	///////////////////////////////////////////

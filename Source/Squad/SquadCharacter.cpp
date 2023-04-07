@@ -448,5 +448,20 @@ void ASquadCharacter::Calc_CCArray_Data()
 
 void ASquadCharacter::Clear_CCArray()
 {
-	CCArray.Empty();
+	for (int32 i = 0 ; i < CCArray.Num(); i++) {
+		if (CCArray[i].GetUseCharacterData() != CCArray[i].GetTargetCharacterData()) {
+			this->Evasion -= CCArray[i].Skill_TargetAvoidanceRateCorrectionValue;
+			this->Accuracy -= CCArray[i].Skill_TargetAccurancyRateCorretionValue;
+		}
+		else {
+			this->Evasion -= CCArray[i].Skill_UsedCharacterEvasionCorrectionValue;
+			this->Defense -= CCArray[i].Skill_UsedCharacterDefensiveCorrectionValue;
+		}
+
+		if (CCArray[i].Skill_Stun == true) {
+			this->IsStun = false;
+		}
+		CCArray.RemoveAt(i);
+		i--;
+	}
 }

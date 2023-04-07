@@ -166,7 +166,8 @@ void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 	if(!IsDeath) {
 		//UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 		USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-		Cast<ABattleController>(gameIns->BCIns)->RemoveFromEnemyEndBattleArray(ArrayNumbering);
+		ArrayNumbering = 999;
+		Cast<ABattleController>(gameIns->BCIns)->RemoveFromEnemyEndBattleArray(this);
 		SetGridOff();
 		Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
 
@@ -194,12 +195,6 @@ void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 	}
 
 
-}
-	
-void AEnemySquadCharacter::TestLog()
-{
-	auto Loc = GetActorLocation().ToString();
-	UE_LOG(LogClass, Log, L"%s", *Loc);
 }
 
 void AEnemySquadCharacter::SetBelongToBattleTrigger(ABattleTrigger* BattleTrigger)
@@ -424,4 +419,6 @@ void AEnemySquadCharacter::SetHighLight(bool OnOff)
 	Weapon->SetRenderCustomDepth(OnOff);
 	GetMesh()->SetCustomDepthStencilValue(2);
 	Weapon->SetCustomDepthStencilValue(2);
+
+	SetbIsHighLight(OnOff);
 }

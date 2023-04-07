@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Squad.h"
 #include "GameFramework/PlayerController.h"
 #include "CursorHighlight.h"
 #include "BattleController.h"
@@ -21,54 +21,47 @@ class SQUAD_API ASquadController : public APlayerController
 {
 	GENERATED_BODY()
 	
-public:
 	ASquadController();
 
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor", meta = (AllowPrivateAccess = "true"))
-	class ACursorHighlight* Highlight;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Battle", meta = (AllowPrivateAccess = "true"))
-	class ABattleController* BattleController;
-
-	
 	virtual void SetupInputComponent() override;
 
 	UFUNCTION()
-	void RayHit();
-
-	bool IsGridSelected = false;
+		void RayHit();
 
 private:
 
+	
+
+	UPROPERTY(Visibleinstanceonly, BlueprintReadOnly, Category = "Battle", meta = (AllowPrivateAccess = "true"))
+		class ABattleController* BattleController;
+
+	UPROPERTY(Visibleinstanceonly, BlueprintReadOnly, Category = "Battle", meta = (AllowPrivateAccess = "true"))
+		class USquadGameInstance* gameIns;
+
+	UPROPERTY(Visibleinstanceonly, BlueprintReadOnly, Category = "Battle", meta = (AllowPrivateAccess = "true"))
+		class ASquadGameMode* SquadGameMode;
+
 	FHitResult Hit;
-	FVector HitActorLoc;
-
-
-
-	void MoveCharacter();
-	void MoveToMouseCursor(const FVector Location);
+	FVector HitActorLoc;		   
 
 	class ASquadCharacter* pRayHitCharacter;
-	class ASquadCharacter* pRayHitEnemyCharacter;
-
+	class AEnemySquadCharacter* pRayHitEnemyCharacter;
 	class ASquadCharacter* pRayHitSelectedCharacter;
-
 	class ASquadCharacter* Controller_SelectedCharacter;
+
+	class APlayerSquadCharacter* RayHitCharacter;
+
+	FHitResult RayHitResult;
 
 public:
 
 	void SetpRayHitCharacter(ASquadCharacter* Char) { pRayHitCharacter = Char; };
 	void SetpRayHitSelectedCharacter(ASquadCharacter* Char) { pRayHitSelectedCharacter = Char; };
-	void SetHighLight(ACursorHighlight* Cursor);
+
 	
 	// Key Bind 
-	void Debug_TurnSystem1();
-	void Debug_TurnSystem2();
-
-	FInputActionBinding testAB;
 
 	void SetKeyBindSkillButton1();
 	void SetKeyBindSkillButton2();
@@ -92,9 +85,6 @@ public:
 	class APlayerSquadCharacter* Target_Explorer = nullptr;
 	class APlayerSquadCharacter* preTarget_Explorer = nullptr;
 
-	void CharacterMove();
-
-	//void PlayerCharater_Move();
 
 	void EmptypRayHitCharacter(ASquadCharacter* CurrentChar);
 
@@ -110,27 +100,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMenuInput(bool bIsStop);
 
+	void SetBattleController();
+
 private:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TimeLine", Meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* Curve1;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TimeLine", Meta = (AllowPrivateAccess = "true"))
-	UCurveVector* Curve2;
-
-	FTimeline LerpTimeline;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TimeLine", Meta = (AllowPrivateAccess = "true"))
-		float LerpTimelineLength;
-
-	UFUNCTION()
-	void TimelineCallbackTest(float value);
-
-	UFUNCTION()
-	void TimelineFinishCallbackTest();
-
-	UFUNCTION()
-	FVector PathFinder();
 
 	FVector StartLocation;
 	FVector EndLocation;
@@ -139,7 +112,6 @@ private:
 	FVector EndLoc;
 	float YOffset;
 
-	bool testbool;
 
 
 	UPROPERTY()
@@ -152,3 +124,5 @@ private:
 
 	
 };
+
+//FInputActionBinding testAB;

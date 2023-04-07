@@ -29,12 +29,18 @@ ABattleController::ABattleController()
 
 }
 
+void ABattleController::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	
+}
+
 // Called when the game starts or when spawned
 void ABattleController::BeginPlay()
 {
 	Super::BeginPlay();
 		
-	
 	auto gameIns = GetWorld()->GetGameInstance();
 	Cast<USquadGameInstance>(gameIns)->BCIns = this;
 
@@ -137,7 +143,13 @@ void ABattleController::StartTurnSystem_init()
 	// UI
 	//Cast<UExploreWidget>(Cast<ASquadGameMode>(gameMode)->GetExploreWidget())->BeHideTaskCanvas();
 	Cast<ASquadGameMode>(gameMode)->ViewBattleWidget();
-	Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	//Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true); // 삭제
+
+	if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
+		Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
 
 	auto gameIns = GetWorld()->GetGameInstance();
 	Cast<USquadGameInstance>(gameIns)->SelectedCharacter = nullptr;
@@ -252,6 +264,7 @@ void ABattleController::StartTurnSystem()
 	auto bm = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
 
 	Cast<UBattleWidget>(bm->GetCurrentWidget())->ClearWidget_SkillPart();
+
 	//SetSelectedCharacter(Cast<ASquadCharacter>(FriendlyCharacters[0]));
 
 	APlayerSquadCharacter* SC = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
@@ -260,12 +273,14 @@ void ABattleController::StartTurnSystem()
 	Cast<APlayerSquadCharacter>(SC)->SetHighLight(true);
 	Cast<APlayerSquadCharacter>(SC)->SetGridOn();
 
-	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->IsGridSelected = true;
 	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(SC);
 	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(SC);
 
 	bm->UpDateWidgetText_Right2(Cast<APlayerSquadCharacter>(SC));
 	bm->UpDateWidgetText(Cast<APlayerSquadCharacter>(SC));
+
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
 	SC->PlaySelectedSound();
 
 
@@ -304,14 +319,6 @@ AActor* ABattleController::GetSelectedCharacter()
 		return SystemState.SelectedCharacter;
 	else
 		return nullptr;
-}
-
-void ABattleController::SetEnd()
-{
-	if (SystemState.SelectedCharacter == Cast<AEnemySquadCharacter>(SystemState.SelectedCharacter) && SetDebug == true)
-	{
-		EndTurnSystem();
-	}
 }
 
 void ABattleController::EndTurnSystem()
@@ -485,10 +492,10 @@ void ABattleController::WorkEnemyAI()
 		GetWorld()->GetTimerManager().ClearTimer(WaitHandle);
 		BeCheck();		
 	}
-	else if(EnemyEndBattleArray.Num() != EnemyCharacters.Num() - (EnemyDeathCount + stunCharactersNum)) // 그렇지 않다면 전투리스트 인덱스 0번째의 적 캐릭터를 팝한다.
+	else if(EnemyEndBattleArray.Num() != EnemyCharacters.Num() - (EnemyDeathCount)) // 그렇지 않다면 전투리스트 인덱스 0번째의 적 캐릭터를 팝한다.
 	{
 		AEnemySquadCharacter* Enemy = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[0]);
-		EnemyStartBattleArray.RemoveAt(0);
+		EnemyStartBattleArray.RemoveSingle(Enemy);
 		ASquadAIController* controller = Cast<ASquadAIController>(Enemy->GetController());		
 		
 	
@@ -496,27 +503,23 @@ void ABattleController::WorkEnemyAI()
 		controller->EnemyChararacter_SetFrindlyCharacterList(PlayerEndBattleArray);
 		else
 		controller->EnemyChararacter_SetFrindlyCharacterList(PlayerStartBattleArray);
-
-		controller->EnemyCharacter_ActiveAI();
-		if(Enemy->GetUnderGrid() != nullptr)
-		Enemy->GetUnderGrid()->SetGridInfo_Material_Black(); // 장판 검정색으로 변환
+		
+		SGLOG_S(Warning);
 		EnemyEndBattleArray.Push(Enemy);
+		
+		SGLOG_S(Warning);
+		controller->EnemyCharacter_ActiveAI();
+	
+
+		if(Enemy->GetUnderGrid() != nullptr)
+		Enemy->GetUnderGrid()->SetGridInfo_Material_Black(); 
+		
 
 		// 전투를 실행시킨다
 		// 전투가 끝나면 전투종료리스트에 푸쉬한다.
-		//if(EnemyStartBattleArray.Num() != 0)
-		/*
-		{
-			GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
-				{
-					WorkEnemyAI();
-
-				}), WaitTime, false);
-		}
-		*/
 
 	}
-	else if(EnemyEndBattleArray.Num() == EnemyCharacters.Num() - (EnemyDeathCount + stunCharactersNum))
+	else if(EnemyEndBattleArray.Num() == EnemyCharacters.Num() - (EnemyDeathCount))
 	{
 		for (int32 i = 0; i < EnemyCharacters.Num(); i++)
 		{
@@ -582,29 +585,29 @@ void ABattleController::WorkEnemyAI()
 
 // Enemy Start & End Battle Array
 
-void ABattleController::RemoveFromEnemyEndBattleArray(int32 ArrayNumbering)
+void ABattleController::RemoveFromEnemyEndBattleArray(AActor* RemoveUnit)
 {
 	if(EnemyEndBattleArray.Num() > 0)
 	{ 
-		EnemyEndBattleArray.RemoveAt(ArrayNumbering);
+		EnemyEndBattleArray.RemoveSingle(RemoveUnit);
 		for(int32 i = 0 ; i < EnemyEndBattleArray.Num() ; i++)
 		Cast<AEnemySquadCharacter>(EnemyEndBattleArray[i])->ArrayNumbering = i;
 	}
 	else if (EnemyStartBattleArray.Num() > 0) // 첫턴에 원턴킬 날때 생기는 오류 보정 - 만약 적이 그럴 수 있는 상황이 생기면 아군 배열에도 추가해야함
 	{
-		EnemyStartBattleArray.RemoveAt(ArrayNumbering);
+		EnemyStartBattleArray.RemoveSingle(RemoveUnit);
 		for (int32 i = 0; i < EnemyStartBattleArray.Num(); i++)
 			Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->ArrayNumbering = i;
 	}
 }
 
-void ABattleController::RemoveFromPlayerEndBattleArray(int32 ArrayNumbering, int32 Numbering)
+void ABattleController::RemoveFromPlayerEndBattleArray(AActor* RemoveUnit)
 {
-	PlayerEndBattleArray.RemoveAt(ArrayNumbering);
+	PlayerEndBattleArray.RemoveSingle(RemoveUnit);
 	for (int32 i = 0; i < PlayerEndBattleArray.Num(); i++)
 		Cast<APlayerSquadCharacter>(PlayerEndBattleArray[i])->ArrayNumbering = i;
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList.RemoveAt(Numbering);
+	Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList.RemoveSingle(RemoveUnit);
 	for (int32 i = 0; i < Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList.Num(); i++)
 		Cast<APlayerSquadCharacter>(Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList[i])->numbering = i;
 	PlayerDeathCount++;
