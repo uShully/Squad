@@ -23,7 +23,7 @@
 ABattleTrigger::ABattleTrigger()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	BoxColiision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxColiision->SetBoxExtent(FVector(32.f, 32.f, 32.f));
@@ -35,15 +35,6 @@ ABattleTrigger::ABattleTrigger()
 
 }
 
-// Called when the game starts or when spawned
-void ABattleTrigger::BeginPlay()
-{
-	Super::BeginPlay();
-	
-
-	
-
-}
 
 void ABattleTrigger::InitBT()
 {
@@ -59,42 +50,12 @@ void ABattleTrigger::InitBT()
 
 void ABattleTrigger::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	/*
-		if (OtherActor == Cast<APlayerSquadCharacter>(OtherActor))
-		{
-			if(!OverlapSwitch){
-	
-				auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-				gameMode->BTIns = this;
-				gameMode->ViewDecisionWidget();
 
-				auto SCMIns =Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
-				SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
-
-				for(int32 i = 0 ; i < SCMIns->FriendlyCharList.Num(); i++)
-				{
-					auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
-					Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation());
-					Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
-					Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
-					Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
-			
-					BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
-				}
-				if (pGridManager != nullptr)
-					pGridManager->InitGrid();
-
-				OverlapSwitch = true;
-		}
-	}
-	*/
 }
 
 void ABattleTrigger::StartBattleEvent()
 {
-		auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
-		//SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
-		
+		auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;		
 		auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
 
 		
@@ -165,7 +126,6 @@ void ABattleTrigger::InitBattleSetting()
 
 void ABattleTrigger::EndBattle()
 {
-	//pGridManager->EndGrid();
 	Destroy();
 }
 
@@ -174,9 +134,7 @@ void ABattleTrigger::InitBattleBox()
 	BoxColiision->SetBoxExtent(FVector(450.0f * numberOfBox,900.f , 600.f));
 
 	FActorSpawnParameters SpawnParams;
-	// 시작시 저장하는 정보 
-	// 1. EventBox 정보 :: SpawnGridManger
-	// 2. 
+
 	for (int i = 0; i < numberOfBox; i++)
 	{
 		FVector Loc(this->GetActorLocation().X - i * 900.f, this->GetActorLocation().Y, this->GetActorLocation().Z);
@@ -253,22 +211,7 @@ void ABattleTrigger::DeleteEnemyCharacter()
 		UE_LOG(LogClass, Log, TEXT(" List Num : %d"), EnemyList.Num());
 	}
 }
-/*
-void ABattleTrigger::SetEventBoxState(EEventBoxState EventBoxState)
-{
-	// 임시 세팅 함수
 
-	if(	SpawndBoxCout < 2 ) 
-	EventBoxState = EEventBoxState::TE_TypeA;
-	else if (SpawndBoxCout == 2)
-	EventBoxState = EEventBoxState::TE_TypeB;
-	else if (SpawndBoxCout > 2)
-	EventBoxState = EEventBoxState::TE_TypeC;
-
-
-	SpawndBoxCout++;
-}
-*/
 void ABattleTrigger::BattleTrigger_PlayerSpreadOut()
 {
 	auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
@@ -279,7 +222,7 @@ void ABattleTrigger::BattleTrigger_PlayerSpreadOut()
 	{
 		auto PlayerController = Cast<ASquadAIController>(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController());
 		PlayerController->PlayerCharacter_SpreadOut();
-		//PlayerController->OnMoveCompleted
+
 	
 	}
 

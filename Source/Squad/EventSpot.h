@@ -41,6 +41,5 @@ protected:
 
 	UPROPERTY()
 	UUserWidget* CurrentWidget;
-public:	
 
 };

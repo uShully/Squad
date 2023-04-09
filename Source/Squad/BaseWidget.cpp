@@ -28,17 +28,8 @@ void UBaseWidget::NativeConstruct()
 		MapButton->OnClicked.AddDynamic(this, &UBaseWidget::OnClickMapButton);
 	}
 
-	/*
-	tempData.LifePoint = 10.f;
-	tempData.Damage = 1.f;
-	tempData.ClassNumber = 0.f;
-	tempData.CurrentAmmo = 5.f;
-	*/
-	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-
-	
+	gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());	
 	gameIns->CharSlotEmpty();
-
 }
 
 void UBaseWidget::CharacterSetting(float ClassNumber)

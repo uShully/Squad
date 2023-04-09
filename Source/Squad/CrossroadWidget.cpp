@@ -14,7 +14,6 @@ void UCrossroadWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	//UpCrossroad = Cast<UButton>(GetWidgetFromName("UPCROSSROADBUTTON"));
 	if (UpCrossroad != nullptr)
 	{
 		UpCrossroad->OnClicked.AddDynamic(this, &UCrossroadWidget::OnClickEvent1);
@@ -28,19 +27,6 @@ void UCrossroadWidget::NativeConstruct()
 		DownCrossroad->OnClicked.AddDynamic(this, &UCrossroadWidget::OnClickEvent3);
 	}
 
-	/*
-	CrossroadName = Cast<UTextBlock>(GetWidgetFromName("CROSSROADNAME"));
-	if (CrossroadName != nullptr)
-	{
-		//CrossroadName->SetText(FText::FromString(CrossRoadStringName));
-	}
-
-	HomeName = Cast<UTextBlock>(GetWidgetFromName("HOMENAME"));
-	if (HomeName != nullptr)
-	{
-		//HomeName->SetText(FText::FromString(HomeStringName));
-	}
-	*/
 	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 
 	SplayerController->SetSquadControllerInput(false);

@@ -33,7 +33,7 @@ class SQUAD_API AEnemySquadCharacter : public ASquadCharacter
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 public:
-
+	
 	FDeleEnemy_Single Fun_Death;
 	void SetBelongToBattleTrigger(class ABattleTrigger* BattleTigger);
 	ABattleTrigger* GetBelongToBattleTrigger();
@@ -91,6 +91,8 @@ public:
 	AActor* ShotTarget;
 	void SetShotTarget(AActor* Target) { this->ShotTarget = Target;  };
 
+protected:
+
 	UPROPERTY()
 		TSubclassOf<class UAnimInstance> RecruitAnimBP;
 
@@ -106,9 +108,6 @@ public:
 	UPROPERTY()
 		TSubclassOf<class UAnimInstance> SniperAnimBP;
 
-protected:
-
-	
 
 public:
 	FText EnemyCharacter_BrunchName;
@@ -120,15 +119,17 @@ public:
 	UFUNCTION()
 		void SetHighLight(bool OnOff);
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Enemy_State")
 		EEnemyRate EnemyRate = EEnemyRate::Normal;
 
 	bool IsCharacterUseAttack = false;
 	class ASquadCharacter* tempTargetCharacter;
 
 	private:
+
 		bool bIsHighLight = false;
 		void SetbIsHighLight(bool OnOff) { bIsHighLight = OnOff; };
+
 	public:
 		bool GetbIsHighLight() { return bIsHighLight; };
 };

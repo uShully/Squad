@@ -43,5 +43,5 @@ class SQUAD_API UBaseWidget : public UUserWidget
 	///////
 
 	FCharacterDataStruct tempData;
-
+	class USquadGameInstance* gameIns;
 };

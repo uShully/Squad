@@ -188,16 +188,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	/*
-	void Class_0_Mesh_Load();
-	void Class_1_Mesh_Load();
-	void Class_2_Mesh_Load();
-
-
-	TArray<FSkeletalMeshCop*> SkeletalMeshArray;
-	*/
 };
 
