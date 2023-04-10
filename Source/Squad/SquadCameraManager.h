@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Squad.h"
 #include "SquadCharacter.h"
 #include "Components/BoxComponent.h"
 #include "SquadCameraManager.generated.h"
@@ -17,7 +17,11 @@ class SQUAD_API ASquadCameraManager : public ACharacter
 
 
 	ASquadCameraManager();
-
+protected:
+	void PlusTargetArmLeght();
+	void MinusTargetArmLength();
+	void PlusCameraBoomRotator();
+	void MinusCameraBoomRotator();
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -28,14 +32,7 @@ public:
 
 	
 	void SortFrindlyCharList();
-	//virtual void PostInitializeComponents() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
-	// 2.14
-	void PlusTargetArmLeght();
-	void MinusTargetArmLength();
-	void PlusCameraBoomRotator();
-	void MinusCameraBoomRotator();
-
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
@@ -81,9 +78,6 @@ public:
 
 	void Control_SetBattleCameraLocation(float DeltaTime);
 
-	void Control_SetBattleEnd();
-
-	void Control_ResultToRun();
 
 	FVector ExplorerLocation;
 	FVector BattleLocation;

@@ -41,25 +41,15 @@ ASquadCameraManager::ASquadCameraManager()
 	UnitPos_First->SetBoxExtent(FVector(32.f, 32.f, 5.f));
 	UnitPos_First->SetCollisionProfileName("UnitPos_First");
 	UnitPos_First->SetupAttachment(RootComponent);
-	//UnitPos_First->RelativeLocation = FVector(-720.0f, 0.f, 0.f);
 
 	UnitPos_Last = CreateDefaultSubobject<UBoxComponent>(TEXT("UnitPos_Last"));
 	UnitPos_Last->SetBoxExtent(FVector(32.f, 32.f, 5.f));
 	UnitPos_Last->SetCollisionProfileName("UnitPos_Last");
 	UnitPos_Last->SetupAttachment(RootComponent);
-	//UnitPos_Last->RelativeLocation = FVector(-720.0f, 0.f, 0.f);
 
 	UnitPos_First->OnComponentBeginOverlap.AddDynamic(this, &ASquadCameraManager::OnOverlapBegin);
 	UnitPos_Last->OnComponentBeginOverlap.AddDynamic(this, &ASquadCameraManager::OnOverlapBegin);
 
-	/*
-	static ConstructorHelpers::FObjectFinder<UBlueprint> Character1(TEXT("Blueprint'/Game/Characters/CharacterBP/PlayerSquadCharacter.PlayerSquadCharacter'"));
-	if (Character1.Succeeded())
-	{
-		Character_temp = (UClass*)Character1.Object->GeneratedClass;
-		TestFuc();
-	}
-	*/
 }
 
 void ASquadCameraManager::BeginPlay()
@@ -83,6 +73,8 @@ void ASquadCameraManager::BeginPlay()
 
 	UnitPos_First_RelativeLocation = UnitPos_First->RelativeLocation;
 	UnitPos_Last_RelativeLocation = UnitPos_Last->RelativeLocation;
+
+	
 }
 
 void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -97,7 +89,7 @@ void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 
 		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());		
 		int32 NumofChar = FriendlyCharList.Num();//(gameIns->CharSlot.SlotNum);
-		// 4 - 3 / 3 - 2
+
 		if (OverlappedComp == UnitPos_Last && Cast<APlayerSquadCharacter>(OtherActor)->numbering == NumofChar - 1 && UnitPos_Check_Last == false) {
 			UnitPos_Check_Last = true;
 			UnitPos_Last_RelativeLocation = UnitPos_Last->RelativeLocation;
@@ -107,13 +99,8 @@ void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 
 	if (UnitPos_Check_First == true && UnitPos_Check_Last == true && UnitPos_Init == false) {
 			UnitPos_Init = true;
-			
-
-			
-
-
-			FTimerHandle WaitHandle;
-			
+		
+			FTimerHandle WaitHandle;			
 			
 			auto gameIns = GetWorld()->GetGameInstance();			
 		
@@ -124,8 +111,6 @@ void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 			ControlValue_PlayerCharacterMovement_BeginPlay = false;
 			GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 				{
-					//WorkEnemyAI();
-
 					SplayerController->SetSquadControllerInput(true);
 					EnableInput(SplayerController);
 
@@ -133,19 +118,15 @@ void ASquadCameraManager::OnOverlapBegin(class UPrimitiveComponent* OverlappedCo
 	}
 
 
-		// 일단은 임시 코드 || 문제는 1명, 2명, 3명일때 작동하지않는다 반드시 보완이 필요 - 
+		// 일단은 임시 코드 || 문제는 1명, 2명, 3명일때 작동하지않는다 반드시 보완이 필요
+		// - UnitPos_Last를 캐릭터 인원수에 맞춰서 Loc을 변경시켜 해결 
 }
 
-void ASquadCameraManager::SetUnitPos_Last_Location(int32 number) // 임시
+void ASquadCameraManager::SetUnitPos_Last_Location(int32 number)
 {
 	// 4명 Y 650 , 3명 Y 650 - (180 * 1)
 	// n명 Y 650 - (180 * (4 - n) )
-	
 
-	//FVector CompLoc = UnitPos_Last->RelativeLocation;
-	//FVector tempVector(0.f, 180 * (4 - number), 0.f);
-
-	
 	FVector CompLoc = UnitPos_First->RelativeLocation;
 	FVector tempVector(0.f, 180 * ( number - 1), 0.f);
 	FVector ChangeCompLoc = CompLoc + tempVector;
@@ -169,10 +150,7 @@ void ASquadCameraManager::Tick(float DeltaTime)
 
 void ASquadCameraManager::GetFriendlyChar()
 {
-	
-
 	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), FriendlyCharList);
-	//UE_LOG(LogClass, Log, TEXT(" Get Frind num : %d"), FriendlyCharList.Num());
 	SortFrindlyCharList();
 }
 
@@ -207,41 +185,16 @@ void ASquadCameraManager::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASquadCameraManager::MoveRight);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASquadCameraManager::MoveChar);
 
-	// ex)BindAction 
+	
+#ifdef __SGDEBUG__
+
 	PlayerInputComponent->BindAction("Etc", EInputEvent::IE_Released, this, &ASquadCameraManager::zoomswitch);
 	PlayerInputComponent->BindAction("Plus", EInputEvent::IE_Released, this, &ASquadCameraManager::PlusTargetArmLeght);
 	PlayerInputComponent->BindAction("Minus", EInputEvent::IE_Released, this, &ASquadCameraManager::MinusTargetArmLength);
 	PlayerInputComponent->BindAction("PlusRot", EInputEvent::IE_Released, this, &ASquadCameraManager::PlusCameraBoomRotator);
 	PlayerInputComponent->BindAction("MinusRot", EInputEvent::IE_Released, this, &ASquadCameraManager::MinusCameraBoomRotator);
-	//PlayerInputComponent->BindAction("Temp5F", EInputEvent::IE_Released, this, &ASquadCameraManager::Control_PlayerCharacterMovement);
-}
 
-void ASquadCameraManager::PlusTargetArmLeght()
-{
-	CameraBoom->TargetArmLength += 100.f;
-}
-
-void ASquadCameraManager::MinusTargetArmLength()
-{
-	CameraBoom->TargetArmLength -= 100.f;
-}
-
-void ASquadCameraManager::PlusCameraBoomRotator()
-{
-	FRotator Rot = CameraBoom->GetComponentRotation();
-	CameraBoom->AddRelativeRotation(FRotator(-1.f, 0.f, 0.f));
-	//FRotator ChangeRot = Rot - FRotator(0.f, 0.f, -1.f);
-
-	//CameraBoom->SetRelativeRotation(ChangeRot);
-}
-
-void ASquadCameraManager::MinusCameraBoomRotator()
-{
-	FRotator Rot = CameraBoom->GetComponentRotation();
-	CameraBoom->AddRelativeRotation(FRotator(1.f, 0.f, 0.f));
-	//FRotator ChangeRot = Rot - FRotator(0.f, 0.f, 1.f);
-
-	//CameraBoom->SetRelativeRotation(ChangeRot);
+#endif // DEBUGMODE_ONOFF
 
 }
 
@@ -263,14 +216,6 @@ void ASquadCameraManager::MoveChar(float Value)
 	else {
 
 	}
-	/*
-	for(int32 i = 0 ; 0 < FriendlyCharList.Num(); i++)
-	{
-		//Cast<ASquadCharacter>(FriendlyCharList[i])->AddMovementInput(FVector(-1.f, 0.f, 0.f), Value);
-		 ASquadAIController* AIControl = Cast<ASquadAIController>(Cast<ASquadCharacter>(FriendlyCharList[i])->GetController());
-		Cast<ASquadCharacter>(FriendlyCharList[i])->MoveRight(Value);
-		//AIControl->MoveToLocation(UnitPos_First->GetComponentLocation() + (0.f , 100.f * i, 0.f));
-	}*/
 }
 
 void ASquadCameraManager::Control_PlayerCharacterMovement(bool Switch)
@@ -284,6 +229,7 @@ void ASquadCameraManager::Control_PlayerCharacterMovement(bool Switch)
 
 void ASquadCameraManager::Control_CameraMovement(bool Switch)
 {
+	// true - 카메라 이동가능 , false - 카메라가 이동하지 않음
 	if (Switch == false)
 		ControlValue_CameraMovement = false;
 	else
@@ -292,14 +238,13 @@ void ASquadCameraManager::Control_CameraMovement(bool Switch)
 
 void ASquadCameraManager::Control_SetBattleInit(FVector Loc)
 {
-	//ExplorerLocation = FVector(Loc.X + 540.f, GetActorLocation().Y , GetActorLocation().Z); // 8.30 360.f -> 520.f -> 180.f
 	FVector tempVector(0.f, 0.f, 50.f);
 	BattleLocation = (Loc + tempVector);
 }
 
 void ASquadCameraManager::Control_SetExploreInit(FVector Loc)
 {
-	ExplorerLocation = Loc; // 8.30 360.f -> 520.f -> 180.f
+	ExplorerLocation = Loc;
 }
 
 void ASquadCameraManager::Control_SetBattleCameraLocation(float DeltaTime)
@@ -345,25 +290,19 @@ void ASquadCameraManager::Control_SetBattleCameraLocation(float DeltaTime)
 	
 }
 
-// 쓸모 없음 폐기 예정// 
-void ASquadCameraManager::Control_SetBattleEnd()
+void ASquadCameraManager::SetUnitMovement_Delay(int32 num)
 {
-	SetActorLocation(ExplorerLocation);
-}
-//
+	FTimerHandle WaitHandle;
+	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
+		{
 
+			Control_PlayerCharacterMovement(true);
+			Control_CameraMovement(false);
 
-void ASquadCameraManager::Control_ResultToRun()
-{
-	for (int32 i = 0; i < FriendlyCharList.Num(); i++)
-	{
-		Cast<APlayerSquadCharacter>(FriendlyCharList[i])->LifePoint -= 1.0f;
-	}
+		}), num, false);
 }
 
-//
-
-
+// 디버그용 기능
 
 void ASquadCameraManager::ChangeArmLeght(float DeltaTime)
 {
@@ -381,7 +320,7 @@ void ASquadCameraManager::ChangeArmLeght(float DeltaTime)
 	}
 }
 
-// ���ǽ� ���⶧���� ���� �� �ڿ� ����
+
 
 void ASquadCameraManager::zoomswitch()
 {
@@ -396,16 +335,26 @@ void ASquadCameraManager::zoomswitch()
 
 }
 
-void ASquadCameraManager::SetUnitMovement_Delay(int32 num)
+void ASquadCameraManager::PlusTargetArmLeght()
 {
-	// 중복기능 삭제예정
-	FTimerHandle WaitHandle;
-	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
-		{
-			//WorkEnemyAI();
-
-		Control_PlayerCharacterMovement(true);
-		Control_CameraMovement(false);
-
-		}), num, false);
+	CameraBoom->TargetArmLength += 100.f;
 }
+
+void ASquadCameraManager::MinusTargetArmLength()
+{
+	CameraBoom->TargetArmLength -= 100.f;
+}
+
+void ASquadCameraManager::PlusCameraBoomRotator()
+{
+	FRotator Rot = CameraBoom->GetComponentRotation();
+	CameraBoom->AddRelativeRotation(FRotator(-1.f, 0.f, 0.f));
+
+}
+
+void ASquadCameraManager::MinusCameraBoomRotator()
+{
+	FRotator Rot = CameraBoom->GetComponentRotation();
+	CameraBoom->AddRelativeRotation(FRotator(1.f, 0.f, 0.f));
+}
+

@@ -78,16 +78,12 @@ protected:
 	void SetEvent();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category = "Stage")
-	bool eventState; // 1 = battle , 0 = explorer
-	
-private:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-		class UBoxComponent* BoxColiision;
+	bool eventState; // 1 = battle , 0 = explorer	
 
 public:	
 	
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		class UBoxComponent* BoxColiision;
 
 	UFUNCTION()
 	void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

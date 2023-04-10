@@ -16,17 +16,6 @@
 
 AEnemySquadCharacter::AEnemySquadCharacter()
 {
-	/*
-	AudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("GUNSOUND"));
-	AudioComp->SetupAttachment(RootComponent);
-	*/
-	/*
-	static ConstructorHelpers::FObjectFinder<USoundBase> FireSound(L"SoundWave'/Game/AUDIO/Sound/GunSound/gun_rifle_shot_01.gun_rifle_shot_01'");
-	if (FireSound.Succeeded())
-	{
-		Fire_Sound = FireSound.Object;
-	}
-	*/
 	static ConstructorHelpers::FObjectFinder<USoundBase> GetHitSound(L"SoundWave'/Game/AUDIO/HumanMaleA/Wavs/voice_male_grunt_pain_12.voice_male_grunt_pain_12'");
 	if (GetHitSound.Succeeded())
 	{
