@@ -29,14 +29,12 @@ void UBaseWidget::NativeConstruct()
 	}
 
 	gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());	
-	gameIns->CharSlotEmpty();
+	gameIns->EmptyCharSlotArray();
 }
 
 void UBaseWidget::CharacterSetting(float ClassNumber)
-{
-	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-			
-	if (gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum()) // 과거 문제 지점
+{			
+	if (gameIns->GetCharSlotMaxNum() > gameIns->GetCharSlotNum()) // 과거 문제 지점
 	{
 		tempData.ClassNumber = ClassNumber;
 		tempData.IsExist = true;
@@ -61,11 +59,8 @@ void UBaseWidget::OnClickMapButton()
 	CharacterSetting(0.f);
 	CharacterSetting(3.f);
 	CharacterSetting(8.f);
-	
-	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-
-	gameIns->GameDifficulty = 0;
+	gameIns->SetInitGameDifficulty();
 
 	UE_LOG(LogClass, Log, L" MapButton");
 }

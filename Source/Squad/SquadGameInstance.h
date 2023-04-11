@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Squad.h"
 #include "Engine/GameInstance.h"
 #include "Engine/DataTable.h"
 #include "BattleController.h"
@@ -29,8 +29,9 @@ public:
 
 };
 
+// 인스턴스에 캐릭터 저장용 구조체
 USTRUCT(Atomic, BlueprintType)
-struct FPlayerCharacterSlot
+struct FPlayerCharacterSlot 
 {
 	GENERATED_BODY()
 
@@ -274,8 +275,6 @@ public:
 
 };
 
-
-
 USTRUCT(BlueprintType)
 struct FEventDirectionData : public FTableRowBase
 {
@@ -307,59 +306,46 @@ public:
 	USquadGameInstance();
 
 	virtual void Init() override;
-
-	//virtual void BeginPlay() override;
-
+	
+	// 캐릭터 추가 제외 함수
 	void IncludeCharacterData(FCharacterDataStruct CharacterData);
 	void ExcludeCharacterData();
-	void ExcludeDeadCharacterData(APlayerSquadCharacter * DeadCharacter);
-	int32 GetCharacterDataNum();
 
+	// 캐릭터 슬롯 제어 함수
+	int32 GetCharSlotMaxNum() { return CharSlot.MaxSlotNum; };
+	void EmptyCharSlotArray() { CharSlot.EmptyCharacterDataArry(); };
+	int32 CalCharSlot() { return CharSlot.CalSlotNum(); };
+	FCharacterDataStruct GetCharSlotData(int32 num) { return CharSlot.CharacterDataArry[num]; };
+	TArray<FCharacterDataStruct> GetCharSlotDataArray() { return CharSlot.CharacterDataArry; };
+	int32 GetCharSlotNum();
 
-
-	FPlayerCharacterSlot CharSlot;
-
-	void CharSlotEmpty();
-
-	//	UPROPERTY()
-		//TArray<FPlayerCharacterSlot> CharSlot;
-
-		///////////////
-
-	ABattleController* BCIns;
-	ASquadCameraManager* SCMIns;
-
-
-	AActor* TargetCharacter;
-	AActor* SelectedCharacter;
-
-	UFUNCTION()
-		void InitInstance();
-
-
-
+	// DT 반환 함수
 	FSquadCharacterData* GetSquadCharacterData(int32 weaponNumber);
-
-public:
-
-	bool IsBattleStart = false;
-
-
-private:
-	UPROPERTY()
-		class UDataTable* SquadCharacterTable;
-
-public:
 	FWeaponData* GetWeaponData(int32 WeaponNum);
 	FBrunchData* GetBrunchData(int32 BrunchNum);
 	FSkillValueList* GetSkillValueData(int32 SkillNum);
 	FEventValue* GetEventValueData(int32 mainEventStream);
-
 	FEventProb* GetBattleEventProbData(int32 EventNum);
 	FEventProb* GetNonBattleEventProbData(int32 EventNum);
-
 	FEnemyBrunchData* GetEnemyBrunchData(int32 BrunchNum);
+	
+	// 임시 저장(다음 컨텐츠 추가 때 사용 예정)	
+	FIteminventory* GetPlayerInventory() { return &PlayerInventory; };
 
+public:
+	// 전투 상황 변수
+	// false = 탐색 , true = 전투
+	bool IsBattleStart = false;
+
+	// 주요 객체 저장
+	ABattleController* BCIns;
+	ASquadCameraManager* SCMIns;
+	class ABattleTrigger* BTIns;
+
+	AActor* TargetCharacter;
+	AActor* SelectedCharacter;
+
+	// 볼륨 초기화 변수
 	UPROPERTY(BlueprintReadWrite)
 		float Volume_Master = 0.5f;
 	UPROPERTY(BlueprintReadWrite)
@@ -369,42 +355,59 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		float Volume_Voice = 0.5f;
 
+	// 맵 로드 순서 
+	// 다음 컨텐츠 업데이트시 DB로 저장하여 로드 코드 추가 필요
+	UPROPERTY()
+		TArray<int32> Mission1_mapData = { 1 , 2, 1, 2, 3 };
 
-	FIteminventory* GetPlayerInventory() { return &PlayerInventory; };
+
+	// 게임 난이도 관련 함수
+	UFUNCTION()
+		int32 GetGameDifficulty() { return GameDifficulty; };
+	UFUNCTION()
+		void IncreaseGameDifficulty(int32 IncreaseValue) { GameDifficulty += IncreaseValue; };
+	UFUNCTION()
+		void SetInitGameDifficulty() { GameDifficulty = InitialGameDifficulty; };
 
 private:
-	UPROPERTY()
-		class UDataTable* WeaponDataTable;
+	UFUNCTION()
+		void InitInstance();
 
-	UPROPERTY()
-		class UDataTable* BrunchDataTable;
-
-	UPROPERTY()
-		class UDataTable* SkillValueTable;
-
-	UPROPERTY()
-		class UDataTable* EventValueTable;
-
-	UPROPERTY()
-		class UDataTable* BattleEventProbTable;
-
-	UPROPERTY()
-		class UDataTable* NonBattleEventProbTable;
-
+private:
+	// 캐릭터 슬롯
+	FPlayerCharacterSlot CharSlot;
+	
+	// 분대 인벤토리
+	// 다음 추가 업데이트시 변경 필요
 	UPROPERTY()
 		struct FIteminventory PlayerInventory;
 
-	UPROPERTY()
-		class UDataTable* EnemyBrunchDataTable;
-
-public:
-	UPROPERTY()
-		TArray<int32> Mission1_mapData = { 1 , 2, 1, 2, 3};
-
+	// 게임 난이도
 	UPROPERTY()
 		int32 GameDifficulty = 0;
-
 	UPROPERTY()
 		int32 InitialGameDifficulty = 0;
+	
+
+// DT변수
+private: 
+
+	UPROPERTY()
+		class UDataTable* WeaponDataTable;
+	UPROPERTY()
+		class UDataTable* BrunchDataTable;
+	UPROPERTY()
+		class UDataTable* SkillValueTable;
+	UPROPERTY()
+		class UDataTable* EventValueTable;
+	UPROPERTY()
+		class UDataTable* BattleEventProbTable;
+	UPROPERTY()
+		class UDataTable* NonBattleEventProbTable;
+	UPROPERTY()
+		class UDataTable* EnemyBrunchDataTable;
+	UPROPERTY()
+		class UDataTable* SquadCharacterTable;
+
 };
 

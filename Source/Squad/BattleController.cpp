@@ -166,14 +166,14 @@ void ABattleController::StartTurnSystem_init()
 	Cast<USquadGameInstance>(gameIns)->SCMIns->zoomswitch();
 	Cast<USquadGameInstance>(gameIns)->SCMIns->IsExploreToBattle = true;
 	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetExploreInit(Cast<USquadGameInstance>(gameIns)->SCMIns->GetActorLocation());
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetBattleInit(Cast<ABattleTrigger>(Cast<ASquadGameMode>(gameMode)->BTIns)->GetNeturalAreaLocation());
+	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetBattleInit(Cast<USquadGameInstance>(gameIns)->BTIns->GetNeturalAreaLocation());
 	Cast<USquadGameInstance>(gameIns)->SCMIns->MoveSwitch = true;
 
 
 	SplayerController->SetSquadControllerInput(false);
 	DisableInput(SplayerController);
 
-	Cast<ABattleTrigger>(Cast<ASquadGameMode>(gameMode)->BTIns)->BattleTrigger_PlayerSpreadOut();
+	Cast<USquadGameInstance>(gameIns)->BTIns->BattleTrigger_PlayerSpreadOut();
 	
 	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 		{
@@ -431,9 +431,9 @@ void ABattleController::BeCheck()
 	if (EnemyDeathCount == EnemyCharacters.Num()) // 적의 수와 적의 죽은수가 같으면
 	{
 		auto gameMode = UGameplayStatics::GetGameMode(this);
-	
+		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	// UI
-		if (Cast<ABattleTrigger>(Cast<ASquadGameMode>(gameMode)->BTIns)->BTState == EBattleTriggerState::Boss)
+		if (Cast<USquadGameInstance>(gameIns)->BTIns->BTState == EBattleTriggerState::Boss)
 		{
 			BGMComp->Stop();
 			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ViewGameVictoryWidget();
@@ -711,7 +711,7 @@ void ABattleController::ResultBattle_temp()
 		int32 LastUnit_Loc = gameIns->SCMIns->FriendlyCharList.Num();
 		//gameIns->SCMIns->UnitPos_First->SetWorldLocation(Cast<ABattleTrigger>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->BTIns)->Coordinate[3].MultiArray[2].pGrid->GetActorLocation());
 		//gameIns->SCMIns->UnitPos_Last->SetWorldLocation(Cast<ABattleTrigger>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->BTIns)->Coordinate[4-LastUnit_Loc].MultiArray[2].pGrid->GetActorLocation());
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->BTIns = nullptr;
+		gameIns->BTIns = nullptr;
 
 		pTriggerBox->DeleteBattleTrigger();
 		pTriggerBox = nullptr;
@@ -839,7 +839,7 @@ void ABattleController::ReverseControlChangeSelectedCharacter()
 	auto gameMode = UGameplayStatics::GetGameMode(this);
 
 	auto preSelectedCharacter = SystemState.SelectedCharacter;
-	int32 tempValue;
+	int32 tempValue = 0;
 
 	if (Cast<APlayerSquadCharacter>(preSelectedCharacter)->StateEnum == EStateEnum::SE_End) {
 		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->numbering == FriendlyCharacters.Num() - 1) {
@@ -945,7 +945,7 @@ void ABattleController::ControlChangeSelectedCharacter()
 {
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	auto gameMode = UGameplayStatics::GetGameMode(this);
-	int32 tempValue;
+	int32 tempValue = 0;
 
 	auto preSelectedCharacter = SystemState.SelectedCharacter;
 

@@ -45,7 +45,7 @@ public:
 
 	
 	UFUNCTION()
-	void GetFriendlyChar();
+	void SetFrindlyCharList(TArray<AActor*> CharList);
 
 	TArray<AActor*> FriendlyCharList;
 

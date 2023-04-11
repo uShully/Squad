@@ -38,7 +38,6 @@ ASquadGameMode::ASquadGameMode()
 	{
 		PlayerControllerClass = SquadController.Class;
 	}
-	//PlayerControllerClass
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> BattleStartWidget(L"WidgetBlueprint'/Game/UI/BattleWidget.BattleWidget_C'");
 	if (BattleStartWidget.Succeeded())
@@ -94,15 +93,6 @@ ASquadGameMode::ASquadGameMode()
 		GameVictoryWidgetClass = GameVictoryWidget.Class;
 	}
 
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_0_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_1_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> ClassNumber_2_Mesh(L"SkeletalMesh'/Game/Characters/Modular_soldier_01/Meshes/SM_Modular_soldier_14.SM_Modular_soldier_14'");
-
-	//	static ConstructorHelpers::FObjectFinder<
-
-	//Class_0_Mesh_Load();
-	//Class_1_Mesh_Load();
-	//Class_2_Mesh_Load();
 }
 
 
@@ -118,11 +108,6 @@ void ASquadGameMode::InitGame(const FString& MapName, const FString& Options, FS
 void ASquadGameMode::PreInitializeComponents()
 {
 	Super::PreInitializeComponents();
-	
-
-
-	//GetFriendlyChar();
-
 
 }
 
@@ -132,45 +117,28 @@ void ASquadGameMode::GetFriendlyChar()
 	{
 		PreFriendlyCharList.Empty();
 		tempSCMList.Empty();
-		PlayerCharList.Empty();
 	}
 
-	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), PreFriendlyCharList); // 배치한 캐릭터
-	UGameplayStatics::GetAllActorsOfClass(this, ASquadCameraManager::StaticClass(), tempSCMList); // 카메라 액터
+	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), PreFriendlyCharList); // 배치된 캐릭터 배열
+	UGameplayStatics::GetAllActorsOfClass(this, ASquadCameraManager::StaticClass(), tempSCMList); // 카메라 액터 배열
+	
+	SortFrindlyCharList(); // 캐릭터의 정해진 순번대로 정렬
+	preSetCharacterState(); // gameIns에 저장된 캐릭터 배열의 크기만큼 캐릭터를 삭제
+	SetCharacterState();  // 문제 gameIns에 저장된 캐릭터 정보(병과,체력..)을 배치된 캐릭터에 초기화
+	
+	Cast<ASquadCameraManager>(tempSCMList[0])->SetFrindlyCharList(PreFriendlyCharList); // gameIns를 사용하면 세팅이 초기화되기 전이라서 오류 발생
 
-	UE_LOG(LogClass, Log, TEXT(" %d "), PreFriendlyCharList.Num()); 
-	UE_LOG(LogClass, Log, TEXT(" %d "), tempSCMList.Num()); 
-	
-	
-
-	SortFrindlyCharList(); // 캐릭터 정해진 순번대로 정렬
-	preSetCharacterState();
-	//SetTeamPosition();
-	
-	SetCharacterState();  // 문제
-
-	
-	PlayerCharList = PreFriendlyCharList;
-	
-
-
-	Cast<ASquadCameraManager>(tempSCMList[0])->GetFriendlyChar();
-
-	SetStartGamelevel();
-	
-	
+	SetStartGamelevel();	
 }
 
 void ASquadGameMode::preSetCharacterState()
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	TArray<FCharacterDataStruct> tempArray;
-	tempArray.Append(gameIns->CharSlot.CharacterDataArry);
+	tempArray.Append(gameIns->GetCharSlotDataArray());
 	
-	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharacterDataNum();
+	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharSlotNum();
 
-
-	for (int32 i = 0; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->CharSlot.MaxSlotNum - chaNum; i++)
+	for (int32 i = 0; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharSlotMaxNum() - chaNum; i++)
 	{
 		AActor* tempChar = PreFriendlyCharList.Pop();
 		tempChar->Destroy();
@@ -182,12 +150,10 @@ void ASquadGameMode::preSetCharacterState()
 
 void ASquadGameMode::SaveCharacterData()
 {
-	auto SC = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
+	auto SC = gameIns->SCMIns;
 	auto FrindlyCharacterList = SC->FriendlyCharList;
-
-
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	gameIns->CharSlot.EmptyCharacterDataArry();
+	
+	gameIns->EmptyCharSlotArray();
 
 	for(int i = 0 ; i < FrindlyCharacterList.Num() ; i++)
 	{
@@ -197,20 +163,15 @@ void ASquadGameMode::SaveCharacterData()
 		tempDataStruct.IsExist = true;
 		gameIns->IncludeCharacterData(tempDataStruct);
 	}
-
-
-
 }
 
 void ASquadGameMode::CheckArrayNum()
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	   	  	
+	// 디버그용 캐릭터 갯수 계산 함수   	  	
 	// 게임 인스 데이터
-	float A = gameIns->GetCharacterDataNum();
+	float A = gameIns->GetCharSlotNum();
 	// 모드 데이터
 	float B = PreFriendlyCharList.Num();
-	float C = PlayerCharList.Num();
 	// 카메라 데이터
 	float D = Cast<ASquadCameraManager>(tempSCMList[0])->FriendlyCharList.Num();	
 }
@@ -219,9 +180,7 @@ void ASquadGameMode::SetStartGamelevel()
 {
 	ViewBattleWidget();
 	Cast<UBattleWidget>(CurrentWidget)->Set_BattleWidgetOpacity(1.f);
-
-
-
+	   
 	DisplayExplerWidget = CreateWidget(GetWorld(), ExploreWidgetClass);
 	if (DisplayExplerWidget != nullptr)
 	{
@@ -237,10 +196,10 @@ UUserWidget* ASquadGameMode::GetExploreWidget()
 void ASquadGameMode::SetTeamPosition()
 {
 	
-	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharacterDataNum();
+	int32 chaNum = gameIns->GetCharSlotNum();
 		
 	
-	for(int32 i = 0 ; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->CharSlot.MaxSlotNum - chaNum; i++)
+	for(int32 i = 0 ; i < gameIns->GetCharSlotMaxNum() - chaNum; i++)
 	{
 		AActor* tempChar = PreFriendlyCharList.Pop();
 		tempChar->Destroy();
@@ -274,34 +233,21 @@ void ASquadGameMode::SortFrindlyCharList()
 
 void ASquadGameMode::SetCharacterState() // 캐릭터 능력치 적용
 {
-	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-
 	for (int32 i = 0; i < PreFriendlyCharList.Num(); i++)
-	{
-						
+	{						
 		// 2번째 실행때 gameIns->CharSlot.CharacterDataArry의 num이 0이 되어버려서 크래쉬가 발생
 		// 문제는 인스턴스에 있는 캐릭터데이터배열의 데이터가 추가가 안되는것이 문제
 
-		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum = gameIns->CharSlot.CharacterDataArry[i].ClassNumber;
-		SetCharacterMesh(Cast<APlayerSquadCharacter>(PreFriendlyCharList[i]), Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum);
-		if (gameIns->CharSlot.CharacterDataArry[i].LifePoint != NULL)
-			Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->LifePoint = gameIns->CharSlot.CharacterDataArry[i].LifePoint;
-#if DEBUG == true
-			
-		//Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->
-
-#endif
-	
+		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum = gameIns->GetCharSlotData(i).ClassNumber;
+		SetCharacterMesh(Cast<APlayerSquadCharacter>(PreFriendlyCharList[i]), Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum); // 캐릭터 매쉬, 능력치 적용
+		if (gameIns->GetCharSlotData(i).LifePoint != NULL)
+			Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->LifePoint = gameIns->GetCharSlotData(i).LifePoint;
 	}
-
-
 }
 
 void ASquadGameMode::ClearInstanceCharacterStat()
 {
-	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-
-	gameIns->CharSlot.CharacterDataArry.Empty();
+	gameIns->EmptyCharSlotArray();
 }
 
 void ASquadGameMode::SetCharacterMesh(class APlayerSquadCharacter* Character, int32 classNumber)
@@ -854,10 +800,11 @@ void ASquadGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+
 	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 	SplayerController->SetSquadControllerInput(false);
 	DisableInput(SplayerController);
-	//CheckArrayNum();
 }
 
 UUserWidget* ASquadGameMode::GetCurrentWidget()
@@ -917,13 +864,7 @@ TSubclassOf<UUserWidget> ASquadGameMode::GetDefeatWidgetClass()
 
 void ASquadGameMode::StartBattle()
 {
-	Cast<ABattleTrigger>(BTIns)->InitBattleSetting();
-	
-	//BTIns = nullptr;
-	/*
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	gameIns->BCIns->InitBattleSetting();
-	*/
+	gameIns->BTIns->InitBattleSetting();
 }
 
 void ASquadGameMode::EndBattle()
@@ -1128,14 +1069,9 @@ void ASquadGameMode::Set_BattleWidgetOpacity(float val)
 	Cast<UBattleWidget>(CurrentWidget)->Set_BattleWidgetOpacity(val);
 }
 
-void ASquadGameMode::LoadCharacterMesh()
-{
-
-}
-
 void ASquadGameMode::ViewGameVictoryWidget()
 {
-	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart = false;
+	gameIns->BCIns->IsBattleStart = false;
 	ChangeMenuWidget(GameVictoryWidgetClass);
 }
 

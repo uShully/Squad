@@ -694,10 +694,10 @@ int32 AGridManager::SetEnemyStatRand()
 	TMap < int32, float > a;
 
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	GD = gameIns->GameDifficulty;
+	gameDifficultyValue = gameIns->GetGameDifficulty();
 	int32 TotalProb = 0;
 	TArray<int32> BrunchNum = { 0  , 2 , 4 , 6 , 8 };
-	TArray<float> Prob = { 40.f + (-4.f*GD), 15.f + (1.f*GD), 15.f + (1.f*GD), 15.f + (1.f*GD), 15.f + (1.f*GD) };
+	TArray<float> Prob = { 40.f + (-4.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue) };
 	for (int32 i = 0; i < 5; i++) { // 0 1 2 3 4 
 		// 0ÈÆ·Ãº´ 40%, 1¼ÒÃÑº´ 15%, 2°æÂûº´ 15%, 3µ¹°Ýº´ 15%, 4Àú°Ýº´ 15%
 		
@@ -710,9 +710,9 @@ int32 AGridManager::SetEnemyStatRand()
 	}
 
 	for (auto& c : a) {
-		float Prob = c.Value / TotalProb;
+		float MProb = c.Value / TotalProb;
 
-		FinalMap.Add(c.Key, Prob);
+		FinalMap.Add(c.Key, MProb);
 
 
 	}

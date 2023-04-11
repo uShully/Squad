@@ -38,6 +38,8 @@ ABattleTrigger::ABattleTrigger()
 
 void ABattleTrigger::InitBT()
 {
+	gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	
 	if (BTState == EBattleTriggerState::Normal) {
 		SetEvent();
 		InitBattleBox();
@@ -46,6 +48,7 @@ void ABattleTrigger::InitBT()
 		eventState = 1;
 		InitBattleBox_Boss();
 	}
+	
 }
 
 void ABattleTrigger::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -74,19 +77,18 @@ void ABattleTrigger::StartBattleEvent()
 
 		if (pGridManager != nullptr)
 			pGridManager->InitGrid();
-
-
-		gameMode->BTIns = this;
+		
+		gameIns->BTIns = this;
 		gameMode->ViewDecisionWidget();
 		Cast<UDecisionWidget>(gameMode->GetCurrentSubWidget())->SetResult(eventState);
 
-	//	Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
+
 }
 
 void ABattleTrigger::StartBattleEvent_Boss()
 {
-	auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
-	//SCMIns->ControlValue_PlayerCharacterMovement = !SCMIns->ControlValue_PlayerCharacterMovement;
+	auto SCMIns = gameIns->SCMIns;
+
 
 	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
 
@@ -108,17 +110,16 @@ void ABattleTrigger::StartBattleEvent_Boss()
 		pGridManager->InitGrid();
 
 
-	gameMode->BTIns = this;
+	gameIns->BTIns = this;
 	gameMode->ViewDecisionBossWidget();
 	Cast<UDecisionWidget>(gameMode->GetCurrentSubWidget())->SetBossResult();
 
-	//	Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
 }
 
 void ABattleTrigger::InitBattleSetting()
 {
-	auto gameIns = GetWorld()->GetGameInstance();
-	Cast<USquadGameInstance>(gameIns)->BCIns->InitBattleSetting(EnemyList, this);
+
+	gameIns->BCIns->InitBattleSetting(EnemyList, this);
 
 	for(int32 i = 0 ; i < SpawnGridManger.Num() ; i++)
 	Cast<AGridManager>(SpawnGridManger[i])->SetGridVisible();
@@ -214,7 +215,7 @@ void ABattleTrigger::DeleteEnemyCharacter()
 
 void ABattleTrigger::BattleTrigger_PlayerSpreadOut()
 {
-	auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;
+	auto SCMIns = gameIns->SCMIns;
 	
 
 
@@ -259,7 +260,7 @@ void ABattleTrigger::SetEvent()
 	float totalProb = 0.f;
 	
 	for(int i = 0 ; i < 6 ; i++) {	
-		struct FEventProb* pEventValue = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetBattleEventProbData(i);
+		struct FEventProb* pEventValue = gameIns->GetBattleEventProbData(i);
 		totalProb += pEventValue->EventProb;
 	}
 	

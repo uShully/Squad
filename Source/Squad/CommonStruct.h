@@ -8,7 +8,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "CommonStruct.generated.h"
 
-
+// 인스턴스or세이브 파일에 저장시킬 캐릭터 정보
 USTRUCT(Atomic, BlueprintType)
 struct FCharacterDataStruct
 {

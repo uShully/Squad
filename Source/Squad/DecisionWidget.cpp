@@ -484,9 +484,9 @@ void UDecisionWidget::EventResult_BossBattle()
 
 void UDecisionWidget::EventResult_BattleAvoidence()
 {
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	//Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
-	Cast<ABattleTrigger>(gameMode->BTIns)->DeleteEnemyCharacter();
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+
+	gameIns->BTIns->DeleteEnemyCharacter();
 
 	DecisionResult();
 	RemoveFromParent();
@@ -494,21 +494,17 @@ void UDecisionWidget::EventResult_BattleAvoidence()
 
 void UDecisionWidget::EventResult_IncounterEnd()
 {
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	//Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
 	if (WidgetState == EDecisionEnum::Battle)
-		Cast<ABattleTrigger>(gameMode->BTIns)->DeleteEnemyCharacter();
+		gameIns->BTIns->DeleteEnemyCharacter();
 
 	DecisionResult();
 	RemoveFromParent();
 }
 
 void UDecisionWidget::EventResult_Default()
-{
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	//Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
-
+{	
 	DecisionResult();
 	RemoveFromParent();
 }
@@ -530,10 +526,11 @@ void UDecisionWidget::EventResult_Damage(bool AllUnits, float DamageValue)
 		UGameplayStatics::ApplyDamage(Cast<APlayerSquadCharacter>(SelectedChar), DamageValue, GetWorld()->GetFirstPlayerController(), nullptr, nullptr);
 	}	
 
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	//Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+
+
 	if (WidgetState == EDecisionEnum::Battle)
-		Cast<ABattleTrigger>(gameMode->BTIns)->DeleteEnemyCharacter();
+		gameIns->BTIns->DeleteEnemyCharacter();
 
 
 	DecisionResult();
@@ -560,10 +557,9 @@ void UDecisionWidget::EventResult_Recover(bool AllUnits, float RecoverValue)
 			Cast<APlayerSquadCharacter>(SelectedChar)->LifePoint = Cast<APlayerSquadCharacter>(SelectedChar)->MaxLifePoint;
 	}	
 
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	//Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns)->ControlCharacterCameraMovement(true);
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	if (WidgetState == EDecisionEnum::Battle)
-		Cast<ABattleTrigger>(gameMode->BTIns)->DeleteEnemyCharacter();
+		gameIns->BTIns->DeleteEnemyCharacter();
 
 	DecisionResult();
 	RemoveFromParent();

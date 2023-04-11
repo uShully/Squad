@@ -141,7 +141,7 @@ void ASquadController::RayHit()
 				if (gameIns->SelectedCharacter != nullptr)	{
 					
 					SquadGameMode->UpdataWidget_TargetCharacterPanel(Cast<AEnemySquadCharacter>(RayHitResult.Actor));
-					auto SelectedChar = Cast<APlayerSquadCharacter>(BattleController->GetSelectedCharacter());
+					//auto SelectedChar = Cast<APlayerSquadCharacter>(BattleController->GetSelectedCharacter());
 					if(Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->StateEnum == EStateEnum::SE_Shot) {
 						Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->Calc_Damage_distribution(Cast<AEnemySquadCharacter>(RayHitResult.Actor));
 						
@@ -541,7 +541,7 @@ void ASquadController::ControlTarget_ExplorerWheel()
 {
 	if(Target_Explorer) {
 		auto list = gameIns->SCMIns->FriendlyCharList;
-		int32 tempNum;
+		int32 tempNum = 0;
 		for (int i = 0; i < list.Num(); i++) {
 			if (Cast<APlayerSquadCharacter>(list[i]) == Target_Explorer) { tempNum = i + 1; }
 			if (tempNum == list.Num()) { tempNum = 0; }
@@ -569,7 +569,7 @@ void ASquadController::ControlTarget_ExplorerWheelReverse()
 {
 	if (Target_Explorer) {
 		auto list = gameIns->SCMIns->FriendlyCharList;
-		int32 tempNum;
+		int32 tempNum = 0;
 		for (int i = 0; i < list.Num(); i++) {
 			if (Cast<APlayerSquadCharacter>(list[i]) == Target_Explorer) { tempNum = i - 1; }
 			if (tempNum == -1 ) { tempNum = list.Num() - 1; }

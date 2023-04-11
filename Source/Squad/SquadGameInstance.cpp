@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/Engine.h"
+#include "BattleTrigger.h"
 
 
 // 데이터 저장용 인스턴스
@@ -76,19 +77,9 @@ void USquadGameInstance::ExcludeCharacterData()
 	CharSlot.CalSlotNum();
 }
 
-void USquadGameInstance::ExcludeDeadCharacterData(APlayerSquadCharacter* DeadCharacter)
-{
-
-}
-
-int32 USquadGameInstance::GetCharacterDataNum()
+int32 USquadGameInstance::GetCharSlotNum()
 {
 	return  CharSlot.SlotNum;
-}
-
-void USquadGameInstance::CharSlotEmpty()
-{
-	CharSlot.EmptyCharacterDataArry();
 }
 
 FWeaponData* USquadGameInstance::GetWeaponData(int32 WeaponNum)

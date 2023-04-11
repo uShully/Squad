@@ -175,7 +175,7 @@ public:
 	TArray<TArray<class AGrid*>> XGridArray;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		int32 GD;
+		int32 gameDifficultyValue;
 
 		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
 			int32 XPosLocRandValue;

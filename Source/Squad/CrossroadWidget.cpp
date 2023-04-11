@@ -94,7 +94,7 @@ void UCrossroadWidget::RecoverUnit(int32 Value)
 void UCrossroadWidget::ChangeGamedifiiculty(int32 Vaule)
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	gameIns->GameDifficulty = gameIns->GameDifficulty + Vaule;
+	gameIns->IncreaseGameDifficulty(Vaule);
 }
 
 FString UCrossroadWidget::Control_MapData()
@@ -128,6 +128,6 @@ void UCrossroadWidget::SaveCharacterData()
 	auto SC = gameIns->SCMIns;
 	auto FrindlyCharacterList = SC->FriendlyCharList;
 
-	gameIns->CharSlot.EmptyCharacterDataArry();
+	gameIns->EmptyCharSlotArray();
 	//gameIns->CharSlot.CharacterDataArry.Add(FrindlyCharacterList[0]);
 }

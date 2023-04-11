@@ -74,13 +74,12 @@ void ASquadAIController::PlayerCharater_MoveLoc(FVector Loc)
 
 void ASquadAIController::PlayerCharacter_SpreadOut()
 {
-	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-	
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	AGrid* tempGrid = PlayerChar->GetUnderGrid();
 	tempGrid->XPos; // 고정
 	tempGrid->YPos; // Y축에서 찾아야함
 	
-	auto num = Cast<ABattleTrigger>(gameMode->BTIns)->Coordinate[tempGrid->XPos].MultiArray.Num();
+	auto num = gameIns->BTIns->Coordinate[tempGrid->XPos].MultiArray.Num();
 	
 	AGrid* BehindGrid;
 	FVector SpreadLoc;
@@ -89,10 +88,10 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 
 	for(int32 i = 0 ; i < num ; i++ )
 	{
-		if (Cast<AGrid>(Cast<ABattleTrigger>(gameMode->BTIns)->Coordinate[tempGrid->XPos].MultiArray[i].pGrid)->
+		if (Cast<AGrid>(gameIns->BTIns->Coordinate[tempGrid->XPos].MultiArray[i].pGrid)->
 			GridInfo.GOTO == EGridOntheObject::Behind)
 		{
-			BehindGrid = Cast<AGrid>(Cast<ABattleTrigger>(gameMode->BTIns)->Coordinate[tempGrid->XPos].MultiArray[i].pGrid);
+			BehindGrid = Cast<AGrid>(gameIns->BTIns->Coordinate[tempGrid->XPos].MultiArray[i].pGrid);
 			FVector SpreadLoc = BehindGrid->GetActorLocation();
 			tempGrid->GridInfo.GOTO = EGridOntheObject::Normal;
 			tempGrid->SetGridInfo_Material();
@@ -116,11 +115,7 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->IsSpreadOut = true;
 			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->Call_GetIsSpreadOut();
 
-			testbool = true;			
-			
-			
-		
-			
+			testbool = true;						
 		}
 	}
 }

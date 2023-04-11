@@ -78,7 +78,9 @@ protected:
 	void SetEvent();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category = "Stage")
-	bool eventState; // 1 = battle , 0 = explorer	
+	bool eventState; // 1 = battle , 0 = explorer
+
+	class USquadGameInstance* gameIns;
 
 public:	
 	

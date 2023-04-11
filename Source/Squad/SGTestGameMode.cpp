@@ -55,7 +55,7 @@ void ASGTestGameMode::InitGame(const FString& MapName, const FString& option, FS
 {
 	Super::InitGame(MapName, option, ErrorMessage);
 
-	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->InitInstance();
+	//Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->InitInstance();
 }
 
 void ASGTestGameMode::PreInitializeComponents()
@@ -82,9 +82,9 @@ void ASGTestGameMode::GetFriendlyChar()
 
 void ASGTestGameMode::SetTeamPosition()
 {
-	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharacterDataNum();
+	int32 chaNum = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharSlotNum();
 
-	for (int32 i = 0; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->CharSlot.MaxSlotNum - chaNum; i++)
+	for (int32 i = 0; i < Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->GetCharSlotMaxNum() - chaNum; i++)
 	{
 		AActor* tempChar = PreFriendlyCharList.Pop();
 		tempChar->Destroy();
@@ -120,9 +120,9 @@ void ASGTestGameMode::SetCharacterState()
 
 	for (int32 i = 0; i < PreFriendlyCharList.Num(); i++)
 	{
-		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->Damage = gameIns->CharSlot.CharacterDataArry[i].Damage;
-		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->LifePoint = gameIns->CharSlot.CharacterDataArry[i].LifePoint;
-		Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum = gameIns->CharSlot.CharacterDataArry[i].ClassNumber;
+		//Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->Damage = gameIns->CharSlot.CharacterDataArry[i].Damage;
+		//Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->LifePoint = gameIns->CharSlot.CharacterDataArry[i].LifePoint;
+		//Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum = gameIns->CharSlot.CharacterDataArry[i].ClassNumber;
 
 		SetCharacterMesh(Cast<APlayerSquadCharacter>(PreFriendlyCharList[i]), Cast<APlayerSquadCharacter>(PreFriendlyCharList[i])->ClassNum);
 	}

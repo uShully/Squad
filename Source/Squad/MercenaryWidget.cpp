@@ -58,7 +58,7 @@ void UMercenaryWidget::ClickInCludeFirstMercenary()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if(gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
+	if(gameIns->GetCharSlotMaxNum() > gameIns->GetCharSlotNum())
 	{
 		gameIns->IncludeCharacterData(FirstMercenaryData);
 		RefreshMark_Include(FText::FromString("a"));
@@ -69,7 +69,7 @@ void UMercenaryWidget::ClickInCludeSecondMercenary()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
+	if (gameIns->GetCharSlotMaxNum() > gameIns->GetCharSlotNum())
 	{
 		gameIns->IncludeCharacterData(SecondMercenaryData);
 		RefreshMark_Include(FText::FromString("b"));
@@ -80,7 +80,7 @@ void UMercenaryWidget::ClickInCludeThirdMercenary()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (gameIns->CharSlot.MaxSlotNum > gameIns->GetCharacterDataNum())
+	if (gameIns->GetCharSlotMaxNum() > gameIns->GetCharSlotNum())
 	{
 		gameIns->IncludeCharacterData(ThirdMercenaryData);
 		RefreshMark_Include(FText::FromString("c"));
@@ -91,7 +91,7 @@ void UMercenaryWidget::ClickExCludeFirstMercenary()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (gameIns->CharSlot.CalSlotNum() == 0)
+	if (gameIns->CalCharSlot() == 0)
 	{
 		UE_LOG(LogClass, Log, TEXT(" No More Exclued "));
 	}
@@ -107,15 +107,15 @@ void UMercenaryWidget::ClickExCludeFirstMercenary()
 void UMercenaryWidget::RefreshMark_Include(FText ClassName)
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	ImageArray[gameIns->CharSlot.CalSlotNum() - 1]->SetColorAndOpacity(FLinearColor::Red);
-	ImageTextArray[gameIns->CharSlot.CalSlotNum() - 1]->SetText(ClassName);
+	ImageArray[gameIns->CalCharSlot() - 1]->SetColorAndOpacity(FLinearColor::Red);
+	ImageTextArray[gameIns->CalCharSlot() - 1]->SetText(ClassName);
 
 }
 
 void UMercenaryWidget::RefreshMark_Exclude()
 {
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	ImageArray[gameIns->CharSlot.CalSlotNum()]->SetColorAndOpacity(FLinearColor::White);
-	ImageTextArray[gameIns->CharSlot.CalSlotNum()]->SetText(FText::FromString("-"));
+	ImageArray[gameIns->CalCharSlot()]->SetColorAndOpacity(FLinearColor::White);
+	ImageTextArray[gameIns->CalCharSlot()]->SetText(FText::FromString("-"));
 
 }

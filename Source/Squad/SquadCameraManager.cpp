@@ -148,9 +148,10 @@ void ASquadCameraManager::Tick(float DeltaTime)
 	Control_SetBattleCameraLocation(DeltaTime);
 }
 
-void ASquadCameraManager::GetFriendlyChar()
+void ASquadCameraManager::SetFrindlyCharList(TArray<AActor*> CharList)
 {
-	UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), FriendlyCharList);
+	FriendlyCharList.Append(CharList);
+	//UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), FriendlyCharList);
 	SortFrindlyCharList();
 }
 
