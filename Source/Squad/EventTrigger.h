@@ -12,44 +12,38 @@ class SQUAD_API AEventTrigger : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+
 	// Sets default values for this actor's properties
 	AEventTrigger();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UFUNCTION()
+	void InitEventBox();
+	void CreateLastBattleStage();
+	void CreateEventSpot();
 
-public:	
-	// Called every frame
+protected:
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
-	class UBoxComponent* BoxCollision;
+	class UBoxComponent* BoxCollision;	
 
-	UFUNCTION()
-	void InitEventBox();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (AllowPrivateAccecce = "true"))
+		int32 numberOfBox;
 
-	void CreateLastBattleStage();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (AllowPrivateAccecce = "true"))
+		TSubclassOf<AActor> BattleTriggerToSpawn;
 
-	void CreateEventSpot();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-	int32 numberOfBox;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-	TSubclassOf<AActor> BattleTriggerToSpawn;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage", meta = (AllowPrivateAccecce = "true"))
 		TSubclassOf<AActor> EventSpotToSpawn;
 
-
-	
-	
 private:
 
 	TArray<AActor*> SpawnBox;
 
+
+	
 };

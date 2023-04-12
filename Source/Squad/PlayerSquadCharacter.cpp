@@ -146,7 +146,7 @@ void APlayerSquadCharacter::Tick(float DeltaTime)
 	}
 
 
-	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() == true
 		&& Cast<ASquadAIController>(GetController())->GetMoveStatus() == EPathFollowingStatus::Idle
 		&& Cast<UCharacterAnimInstance>(animInstance)->IsSpreadOut == true) {
 		Cast<UCharacterAnimInstance>(animInstance)->IsSpreadOut = false;
@@ -285,7 +285,7 @@ void APlayerSquadCharacter::SetSkeletalMeshComp(USkeletalMesh* Head, USkeletalMe
 void APlayerSquadCharacter::SetShotReady()
 {
 	if (CurrentAmmo > 0) {
-		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 
 			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
@@ -458,7 +458,7 @@ void APlayerSquadCharacter::BeShot()
 void APlayerSquadCharacter::SetReloadReady()
 {
 	if(CurrentAmmo != MaxAmmo) {
-		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 
 			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
@@ -476,7 +476,7 @@ void APlayerSquadCharacter::SetReloadReady()
 		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
 	}
 	else {
-		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 
 			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
@@ -586,7 +586,7 @@ void APlayerSquadCharacter::SetMoveReady()
 
 void APlayerSquadCharacter::SetCoverReady()
 {
-		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 
 			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
@@ -604,7 +604,7 @@ void APlayerSquadCharacter::SetCoverReady()
 
 void APlayerSquadCharacter::SetCover()
 {
-	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false) {
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false) {
 		if((StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death))
 		{
 			UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
@@ -637,9 +637,9 @@ void APlayerSquadCharacter::SetStay()
 
 void APlayerSquadCharacter::SetSkill1()
 {
-	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false)) {
+	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false)) {
 		if (Character_Skill1_Cooldown == 0 && CurrentAmmo > 0) {
-			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 				if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
 				else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
@@ -685,9 +685,9 @@ void APlayerSquadCharacter::SetSkill1()
 
 void APlayerSquadCharacter::SetSkill2()
 {
-	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false )) {
+	if ((Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false )) {
 		if (Character_Skill2_Cooldown == 0 && CurrentAmmo > 0) {
-			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
 				if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 					Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
 				else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
@@ -735,7 +735,7 @@ void APlayerSquadCharacter::SetSkill2()
 
 void APlayerSquadCharacter::SetCharacterEnd()
 {
-	if(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true) {
+	if(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() == true) {
 		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 	
 		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(1.f);
@@ -773,7 +773,7 @@ float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const&
 			}
 			UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 			
-			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true) {
+			if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() == true) {
 				CharAnimInst->Hit();
 			}
 			else {
@@ -818,7 +818,7 @@ void APlayerSquadCharacter::PlayerDeath(UCharacterAnimInstance* CharAnimInst)
 	//UGameplayStatics::PlaySoundAtLocation(this, Death_Sound, GetActorLocation(), 1.0f);
 	//FString WeaponName = CharacterStat->GetCharacterWeaponName(); [BUG] 11/13 문제점
 
-	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->IsBattleStart == true){
+	if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() == true){
 		int32 tempRand = (FMath::RandRange(0.f, 1.9f));
 		if (tempRand == 0)
 			CharAnimInst->CrouchDeath_1();

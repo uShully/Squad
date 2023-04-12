@@ -240,7 +240,7 @@ void ASquadController::SetTargetCharacter()
 		{
 			if (HitTarget.Actor == Cast<ASquadCharacter>(HitTarget.Actor))
 			{
-				if (BattleController != nullptr && BattleController->IsBattleStart == true) // 전투가 시작했을시
+				if (BattleController != nullptr && BattleController->GetIsBattleStart() == true) // 전투가 시작했을시
 				{
 					if (HitTarget.Actor == Cast<AEnemySquadCharacter>(HitTarget.Actor) && Cast<AEnemySquadCharacter>(HitTarget.Actor)->StateEnum != EStateEnum::SE_Death) // 적 캐릭터를 선택시
 					{ 
@@ -509,7 +509,7 @@ void ASquadController::SetKeyBindSkillButton5() // 엄폐버튼
 
 void ASquadController::SetkeyBindMousewheel()
 {
-	if (BattleController->IsBattleStart) {
+	if (BattleController->GetIsBattleStart()) {
 		if (AActor* SC = BattleController->GetSelectedCharacter()) {
 		
 			BattleController->ReverseControlChangeSelectedCharacter();
@@ -524,7 +524,7 @@ void ASquadController::SetkeyBindMousewheel()
 
 void ASquadController::SetkeyBindMousewheelreverse()
 {
-	if (BattleController->IsBattleStart) {
+	if (BattleController->GetIsBattleStart()) {
 		if (AActor* SC = BattleController->GetSelectedCharacter()) {
 			
 			BattleController->ControlChangeSelectedCharacter();

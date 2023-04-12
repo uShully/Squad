@@ -119,7 +119,7 @@ void UDebugWidget::OnClickTurnButton()
 {
 	auto GameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (GameIns->BCIns != nullptr && GameIns->BCIns->IsBattleStart == true)
+	if (GameIns->BCIns != nullptr && GameIns->BCIns->GetIsBattleStart() == true)
 	{
 		GameIns->BCIns->EndTurnSystem();
 	}
@@ -155,7 +155,7 @@ void UDebugWidget::OnClickHeelButton()
 {
 	auto GameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	if (GameIns->BCIns != nullptr && GameIns->BCIns->IsBattleStart == true && GameIns->TargetCharacter != nullptr)
+	if (GameIns->BCIns != nullptr && GameIns->BCIns->GetIsBattleStart() == true && GameIns->TargetCharacter != nullptr)
 	{
 		Cast<ASquadCharacter>(GameIns->TargetCharacter)->LifePoint = Cast<ASquadCharacter>(GameIns->TargetCharacter)->MaxLifePoint;
 	}

@@ -40,10 +40,14 @@ void ABattleController::PostInitializeComponents()
 void ABattleController::BeginPlay()
 {
 	Super::BeginPlay();
-		
-	auto gameIns = GetWorld()->GetGameInstance();
-	Cast<USquadGameInstance>(gameIns)->BCIns = this;
-
+	
+	// 게임 인스턴스 초기화
+	gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
+	gameIns->BCIns = this;
+	// 게임모드 초기화
+	gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
+	// 플레이어 컨트롤러 초기화
+	SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 
 	BGMComp->SetSound(ExplorerSound);
 	BGMComp->Play(3.f);
@@ -60,38 +64,37 @@ void ABattleController::Tick(float DeltaTime)
 
 void ABattleController::InitBattleSetting(TArray<AActor*> EnemyList, AActor* triggerBox)
 {
-	// triger
+	// triger box 초기화
 	if (pTriggerBox == nullptr)  pTriggerBox = Cast<ABattleTrigger>(triggerBox);
 
 	ClearArray();
 
-	GetFriendlyCharacters(); // SMC
-	GetEnemyCharacters(EnemyList); // trigger
+	// 플레이어, 적 캐릭터 탐색
+	GetFriendlyCharacters(); 
+	GetEnemyCharacters(EnemyList); 
 
-	SortCharacters(); // 
+	// 모든 캐릭터 정렬
+	SortCharacters();
 
 	SystemState.init();
 
+	PlayerDeathCount = 0;
 	EnemyDeathCount = 0;
 	
 	if (AllCharacters.Num() > 0)
 	{
 		SystemState.CharNumber = AllCharacters.Num();
-		//SystemState.SelectedCharacter = nullptr;
 	}
-
 
 	StartTurnSystem_init();
 }
 
 void ABattleController::GetFriendlyCharacters()
 {
-	auto gameIns = GetWorld()->GetGameInstance();
-	FriendlyCharacters.Append(Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList);
+	FriendlyCharacters.Append(gameIns->SCMIns->FriendlyCharList);
 	for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 	{
 		Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->ArrayNumbering = i;
-		//Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetStatustBarWidget()->SetRenderOpacity(0.5f);
 	}
 	PlayerStartBattleArray.Append(FriendlyCharacters);
 }
@@ -102,13 +105,9 @@ void ABattleController::GetEnemyCharacters(TArray<AActor*> EnemyList)
 
 	for (int32 i = 0; i < EnemyCharacters.Num(); i++)
 	{
-		//Cast<AEnemySquadCharacter>(EnemyCharacters[i])->Fun_Death.BindUFunction(this, FName("AddEnemyDeathCount"));
 		Cast<AEnemySquadCharacter>(EnemyCharacters[i])->ArrayNumbering = i;
 		Cast<AEnemySquadCharacter>(EnemyCharacters[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-		// [BUG] 버그 발생 22/11/09 95번째 줄
 	}
-	//
-	//UGameplayStatics::GetAllActorsOfClass(this, AEnemySquadCharacter::StaticClass(), EnemyCharacters);
 }
 
 void ABattleController::SortCharacters()
@@ -130,130 +129,105 @@ void ABattleController::ClearArray()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////  ///////////////////////////////////////////////////////
+////////////////////////////////////////////                ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void ABattleController::StartTurnSystem_init() 
 {
-	IsBattleStart = true;
+	SetIsBattleStart(true);
 
-	auto gameMode = UGameplayStatics::GetGameMode(this);
-	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
-	// UI
-	//Cast<UExploreWidget>(Cast<ASquadGameMode>(gameMode)->GetExploreWidget())->BeHideTaskCanvas();
-	Cast<ASquadGameMode>(gameMode)->ViewBattleWidget();
-	//Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true); // 삭제
+	// UI	
+	gameMode->ViewBattleWidget();	
 
-	if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+	if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
-	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
-
-	auto gameIns = GetWorld()->GetGameInstance();
-	Cast<USquadGameInstance>(gameIns)->SelectedCharacter = nullptr;
-	Cast<USquadGameInstance>(gameIns)->IsBattleStart = true;
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
+		
+	// 전투 초기화 - 게임 인스턴스 변수 제어
+	gameIns->SelectedCharacter = nullptr;
+	gameIns->IsBattleStart = true;
 	
-	// controller
+	// 전투 초기화 - 탐색시 선택된 캐릭터 초기화
+	SplayerController->ClearSelectedCharacter_Explorer();
+	// 전투 초기화 - 선택된 캐릭터 초기화
+	gameIns->SelectedCharacter = SystemState.SelectedCharacter;
+	// 전투 초기화 - 카메라 제어
+	gameIns->SCMIns->zoomswitch();
+	gameIns->SCMIns->IsExploreToBattle = true;
+	gameIns->SCMIns->Control_SetExploreInit(gameIns->SCMIns->GetActorLocation());
+	gameIns->SCMIns->Control_SetBattleInit(gameIns->BTIns->GetNeturalAreaLocation());
+	gameIns->SCMIns->MoveSwitch = true;
 
-	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->ClearSelectedCharacter_Explorer();
-
-
-	Cast<USquadGameInstance>(gameIns)->SelectedCharacter = SystemState.SelectedCharacter;
-
-
-	Cast<USquadGameInstance>(gameIns)->SCMIns->zoomswitch();
-	Cast<USquadGameInstance>(gameIns)->SCMIns->IsExploreToBattle = true;
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetExploreInit(Cast<USquadGameInstance>(gameIns)->SCMIns->GetActorLocation());
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetBattleInit(Cast<USquadGameInstance>(gameIns)->BTIns->GetNeturalAreaLocation());
-	Cast<USquadGameInstance>(gameIns)->SCMIns->MoveSwitch = true;
-
-
+	// 키 입력 정지
 	SplayerController->SetSquadControllerInput(false);
 	DisableInput(SplayerController);
 
-	Cast<USquadGameInstance>(gameIns)->BTIns->BattleTrigger_PlayerSpreadOut();
+	// 캐릭터 산개
+	gameIns->BTIns->BattleTrigger_PlayerSpreadOut();
 	
+	// 람다식 - 1.5초 후 턴 시작 시스템 호출
 	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 		{
-			//WorkEnemyAI();
-
-
 			StartTurnSystem();
 
 		}), 1.5f, false);
-	// 
+
 	
+	// 적군 전투 배열 초기화
 	EnemyStartBattleArray = (EnemyCharacters);
-
-	//
-		
 	
-	
-	/*
-	if (SystemState.HaveTurnCharacter == Cast<APlayerSquadCharacter>(SystemState.HaveTurnCharacter))
-	{
-		Cast<APlayerSquadCharacter>(SystemState.HaveTurnCharacter)->Debug_Shot();
-	}
-	*/
-	//Cast<APlayerSquadCharacter>(FriendlyCharacters[0])->Debug_Shot();
-
-
-	// 
-
+	// BGM 재생
 	BGMComp->SetSound(BattleSound);
-	BGMComp->FadeIn(3.f);
-
-	
+	BGMComp->FadeIn(3.f);	
 }
 
 void ABattleController::ControlCharacterCameraMovement(bool PlayerMovementSwitch)
 {	// true 면 움직임 false면 안움직임 
-	// 카메라 변수는 false , 캐릭터 변수는 true일때 움직임
-	auto gameIns = GetWorld()->GetGameInstance();
-		
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_PlayerCharacterMovement(PlayerMovementSwitch);
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_CameraMovement(!PlayerMovementSwitch);
+	// 카메라 변수는 false , 캐릭터 변수는 true일때 움직임		
+	gameIns->SCMIns->Control_PlayerCharacterMovement(PlayerMovementSwitch);
+	gameIns->SCMIns->Control_CameraMovement(!PlayerMovementSwitch);
 }
 
 bool ABattleController::SwitchCharacterMovement(bool PlayerMovementSwitch)
 {
-	auto gameIns = GetWorld()->GetGameInstance();
-
-	Cast<USquadGameInstance>(gameIns)->SCMIns->Control_PlayerCharacterMovement(PlayerMovementSwitch);
+	gameIns->SCMIns->Control_PlayerCharacterMovement(PlayerMovementSwitch);
 	
-	return Cast<USquadGameInstance>(gameIns)->SCMIns->ControlValue_CameraMovement;
+	return gameIns->SCMIns->ControlValue_CameraMovement;
 }
 
 void ABattleController::StartTurnSystem()
-{
-	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
+{	
 	SplayerController->SetSquadControllerInput(true);
 	EnableInput(SplayerController);
 
+	// 모든 캐릭터 상태를 턴 종료 상태로 변경
 	for (int32 i = 0; i < AllCharacters.Num(); i++)
 	{
 		Cast<ASquadCharacter>(AllCharacters[i])->StateEnum = EStateEnum::SE_End;
 	}	
-	//
-	if (!WhosTurn) // 
+	
+	// 플레이어가 선공이면 아군 캐릭터는 대기모드, 적군 캐릭터는 종료모드
+	if (!WhosTurn) 
 	{
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeWhosTurnName(WhosTurn);
+		gameMode->ChangeWhosTurnName(WhosTurn);
 		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 		{
 			Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum = EStateEnum::SE_Stay;
 		}
 	}
-	else // 
+	else // 적 캐릭터 선공시 아군 캐릭터는 종료모드, 적군 캐릭터는 대기모드
 	{
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeWhosTurnName(WhosTurn);
+		gameMode->ChangeWhosTurnName(WhosTurn);
 		for (int32 i = 0; i < EnemyCharacters.Num(); i++)
 		{
 			Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_Stay;
 		}
 	}
 
+	// 전투용 애니메이션 호출
 	for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 	{
 		auto anim = Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->animInstance;
@@ -261,56 +235,50 @@ void ABattleController::StartTurnSystem()
 		Cast<UCharacterAnimInstance>(anim)->Call_GetIsBattle();
 	}
 
-	auto bm = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
+	// 전투 위젯 초기화
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
+	   
+	// 전투 시작시 현재 선택된 캐릭터로 전투 정보 초기화
+	APlayerSquadCharacter* SelectedChar = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
+	SetSelectedCharacter(Cast<ASquadCharacter>(SelectedChar));
 
-	Cast<UBattleWidget>(bm->GetCurrentWidget())->ClearWidget_SkillPart();
+	SelectedChar->SetHighLight(true);
+	SelectedChar->SetGridOn();
 
-	//SetSelectedCharacter(Cast<ASquadCharacter>(FriendlyCharacters[0]));
+	SplayerController->SetpRayHitCharacter(SelectedChar);
+	SplayerController->SetpRayHitSelectedCharacter(SelectedChar);
 
-	APlayerSquadCharacter* SC = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
-	SetSelectedCharacter(Cast<ASquadCharacter>(SC));
+	gameMode->UpDateWidgetText_Right2(SelectedChar);
+	gameMode->UpDateWidgetText(SelectedChar);
 
-	Cast<APlayerSquadCharacter>(SC)->SetHighLight(true);
-	Cast<APlayerSquadCharacter>(SC)->SetGridOn();
-
-	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(SC);
-	Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(SC);
-
-	bm->UpDateWidgetText_Right2(Cast<APlayerSquadCharacter>(SC));
-	bm->UpDateWidgetText(Cast<APlayerSquadCharacter>(SC));
-
-	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
-	SC->PlaySelectedSound();
-
-
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
+	SelectedChar->PlaySelectedSound();
 }
 
 void ABattleController::SetSelectedCharacter(ASquadCharacter* SelectedChararcter)
 {
-	auto gameIns = GetWorld()->GetGameInstance();
-
+	
 	if (SelectedChararcter == nullptr) {
 		SystemState.SelectedCharacter = nullptr;
-		Cast<USquadGameInstance>(gameIns)->SelectedCharacter = SystemState.SelectedCharacter;
+		gameIns->SelectedCharacter = SystemState.SelectedCharacter;
 	}
 	else {
 		SystemState.SelectedCharacter = SelectedChararcter;
-		Cast<USquadGameInstance>(gameIns)->SelectedCharacter = SystemState.SelectedCharacter;
+		gameIns->SelectedCharacter = SystemState.SelectedCharacter;
 			
 		APlayerSquadCharacter* pSelectedCharacter = Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter);
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeSkillButtonWidgetImage(pSelectedCharacter);
+		gameMode->ChangeSkillButtonWidgetImage(pSelectedCharacter);
 	}	
 }
 
 void ABattleController::ClearSelectedCharacter()
 {
-	auto gameIns = GetWorld()->GetGameInstance();	
 	SystemState.SelectedCharacter = nullptr;
-	Cast<USquadGameInstance>(gameIns)->SelectedCharacter = SystemState.SelectedCharacter;
+	gameIns->SelectedCharacter = SystemState.SelectedCharacter;
 
 	FString name = TEXT("nullptr");
-	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeCurrentCharName(name);
+	gameMode->ChangeCurrentCharName(name);
 }
 
 AActor* ABattleController::GetSelectedCharacter()
@@ -323,9 +291,9 @@ AActor* ABattleController::GetSelectedCharacter()
 
 void ABattleController::EndTurnSystem()
 {
+	// 전투 종료시 상황 검사 함수 호출
 	BeCheck();
-	//UE_LOG(LogClass, Log, TEXT(" StartArray : %d "), PlayerStartBattleArray.Num());
-	//UE_LOG(LogClass, Log, TEXT(" EndArray : %d "), PlayerEndBattleArray.Num());
+
 	if (!WhosTurn && IsBattleStart == true)
 	{
 		if (Cast<ASquadCharacter>(SystemState.SelectedCharacter)->IsGridOn) {	
@@ -334,16 +302,15 @@ void ABattleController::EndTurnSystem()
 				Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(false);
 		}
 
-		auto gameMode = UGameplayStatics::GetGameMode(this);
 						
 		SetDisableSkillTargeting(true);
 		SetDisableSkillTargeting(false);
 
-		Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
+		gameMode->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
 		SystemChangeSelectedCharacter();
 		if(SystemState.SelectedCharacter != nullptr) {
-			Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-			Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+			gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+			gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		}
 		// 적이 모두 죽었는지 안죽었는지 판별
 		
@@ -366,8 +333,8 @@ void ABattleController::EndTurnSystem()
 				}
 
 				WhosTurn = true;
-				Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeWhosTurnName(WhosTurn);
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetSquadControllerInput(false);
+				gameMode->ChangeWhosTurnName(WhosTurn);
+				SplayerController->SetSquadControllerInput(false);
 				
 				if (EnemyEndBattleArray.Num() == EnemyCharacters.Num() - EnemyDeathCount)
 				{
@@ -387,38 +354,30 @@ void ABattleController::EndTurnSystem()
 
 				if (IsBattleStart) // 마지막 적을 잡았을때 생길 수 있는 상황을 방지
 				{ 
-					Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
-					EndTurnSystem_Enemy();	
-					
-				}
-
-				
-				
-			}			
-			
-			//StartTurnSystem();
+					Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+					EndTurnSystem_Enemy();						
+				}			
+			}						
 	}
 }
 
 void ABattleController::EndTurnSystem_Enemy()
 {
-	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 	SplayerController->SetSquadControllerInput(false);
-	DisableInput(SplayerController);
-	
+	DisableInput(SplayerController);	
 
 	for (int32 i = 0; i < EnemyCharacters.Num(); i++)
 	{
 		Cast<ASquadCharacter>(EnemyCharacters[i])->Control_CCArray();			// 스킬 효과 가감 함수 추가 예정 12/22
 	}
 
-	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(0.5f); // 위젯 투명도
+	gameMode->Set_BattleWidgetOpacity(0.5f); // 위젯 투명도
 
 	if (WhosTurn) 
 	{
 		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 			{
-				WorkEnemyAI();
+				ActiveEnemyAI();
 
 			}), WaitTime, false);
 		
@@ -430,48 +389,32 @@ void ABattleController::BeCheck()
 {
 	if (EnemyDeathCount == EnemyCharacters.Num()) // 적의 수와 적의 죽은수가 같으면
 	{
-		auto gameMode = UGameplayStatics::GetGameMode(this);
-		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	// UI
-		if (Cast<USquadGameInstance>(gameIns)->BTIns->BTState == EBattleTriggerState::Boss)
+		if (gameIns->BTIns->BTState == EBattleTriggerState::Boss) // 보스 스테이지 일때
 		{
 			BGMComp->Stop();
-			Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ViewGameVictoryWidget();
+			gameMode->ViewGameVictoryWidget();
 		}
-		else {
-			ResultBattle_temp();
+		else { 
+			ResultBattle_BattleEnd();
 
-		
-			//Cast<ASquadGameMode>(gameMode)->ChangeMenuWidget(Cast<ASquadGameMode>(gameMode)->GetVictoryWidgetClass());
-			//BGMComp->Stop();
-			Cast<ASquadGameMode>(gameMode)->ChangeSubWidget(Cast<ASquadGameMode>(gameMode)->GetVictoryWidgetClass());
-			Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText_Right();
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->Target_Explorer = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
-			
-		}
-		//ResultBattle();
-
-				
+			gameMode->ChangeSubWidget(gameMode->GetVictoryWidgetClass());
+			gameMode->ClearCharacterInfoWidgetText_Right();
+			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->Target_Explorer = Cast<APlayerSquadCharacter>(GetSelectedCharacter());			
+		}				
 	}
 	else if(PlayerDeathCount == FriendlyCharacters.Num()) // 플레이어 전멸
 	{
-		//Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeWhosTurnName(WhosTurn);
-		auto gameMode = UGameplayStatics::GetGameMode(this);
-
 		// UI
-		ResultBattle_temp();
+		ResultBattle_BattleEnd();
 		BGMComp->Stop();
-		Cast<ASquadGameMode>(gameMode)->ChangeMenuWidget(Cast<ASquadGameMode>(gameMode)->GetDefeatWidgetClass());
-		
-		//ResultBattle();
+		gameMode->ChangeMenuWidget(gameMode->GetDefeatWidgetClass());
 	}
-	// 같지 않다면 다음 턴으로
 }
 
 // 전투 리스트에서
 
 
-void ABattleController::WorkEnemyAI()
+void ABattleController::ActiveEnemyAI()
 {
 	// 적전투종료리스트와 적리스트의 값이 같으면 종료
 	//if (EnemyEndBattleArray.Num() == EnemyCharacters.Num() - EnemyDeathCount)
@@ -496,19 +439,17 @@ void ABattleController::WorkEnemyAI()
 	{
 		AEnemySquadCharacter* Enemy = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[0]);
 		EnemyStartBattleArray.RemoveSingle(Enemy);
-		ASquadAIController* controller = Cast<ASquadAIController>(Enemy->GetController());		
+		ASquadAIController* AIcontroller = Cast<ASquadAIController>(Enemy->GetController());		
 		
 	
 		if(PlayerStartBattleArray.Num() == 0)
-		controller->EnemyChararacter_SetFrindlyCharacterList(PlayerEndBattleArray);
+			AIcontroller->EnemyChararacter_SetFrindlyCharacterList(PlayerEndBattleArray);
 		else
-		controller->EnemyChararacter_SetFrindlyCharacterList(PlayerStartBattleArray);
-		
-		SGLOG_S(Warning);
+			AIcontroller->EnemyChararacter_SetFrindlyCharacterList(PlayerStartBattleArray);
+
 		EnemyEndBattleArray.Push(Enemy);
-		
-		SGLOG_S(Warning);
-		controller->EnemyCharacter_ActiveAI();
+
+		AIcontroller->EnemyCharacter_ActiveAI();
 	
 
 		if(Enemy->GetUnderGrid() != nullptr)
@@ -547,18 +488,17 @@ void ABattleController::WorkEnemyAI()
 			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->StopMontage();
 		}
 
-		auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 		SplayerController->SetSquadControllerInput(true);
 		EnableInput(SplayerController);
 
 		WhosTurn = false;
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->ChangeWhosTurnName(WhosTurn);
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(1.f);
+		gameMode->ChangeWhosTurnName(WhosTurn);
+		gameMode->Set_BattleWidgetOpacity(1.f);
 		SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
 
-		auto gameMode = GetWorld()->GetAuthGameMode();
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+		
+		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
 		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 		{
 			if(Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum != EStateEnum::SE_Death)
@@ -568,18 +508,18 @@ void ABattleController::WorkEnemyAI()
 			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 			Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+			SplayerController->SetpRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+			SplayerController->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		}
 		Cast<APlayerSquadCharacter>(PlayerStartBattleArray[0])->PlaySelectedSound();
 
-		if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 
-		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetSquadControllerInput(true);
+		SplayerController->SetSquadControllerInput(true);
 	}
 }
 
@@ -606,16 +546,16 @@ void ABattleController::RemoveFromPlayerEndBattleArray(AActor* RemoveUnit)
 	PlayerEndBattleArray.RemoveSingle(RemoveUnit);
 	for (int32 i = 0; i < PlayerEndBattleArray.Num(); i++)
 		Cast<APlayerSquadCharacter>(PlayerEndBattleArray[i])->ArrayNumbering = i;
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList.RemoveSingle(RemoveUnit);
-	for (int32 i = 0; i < Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList.Num(); i++)
-		Cast<APlayerSquadCharacter>(Cast<USquadGameInstance>(gameIns)->SCMIns->FriendlyCharList[i])->numbering = i;
+
+	gameIns->SCMIns->FriendlyCharList.RemoveSingle(RemoveUnit);
+	for (int32 i = 0; i < gameIns->SCMIns->FriendlyCharList.Num(); i++)
+		Cast<APlayerSquadCharacter>(gameIns->SCMIns->FriendlyCharList[i])->numbering = i;
 	PlayerDeathCount++;
 }
 
 void ABattleController::AddPlayerEndBattleArray(AActor* Actor)
 {
-	UE_LOG(LogClass, Log, TEXT("Start: %d  End : %d"), PlayerStartBattleArray.Num(), PlayerEndBattleArray.Num());
+
 	auto tempPlayerChar = Cast<APlayerSquadCharacter>(Actor);
 
 	PlayerStartBattleArray.RemoveAt(tempPlayerChar->ArrayNumbering);
@@ -624,7 +564,7 @@ void ABattleController::AddPlayerEndBattleArray(AActor* Actor)
 
 	PlayerEndBattleArray.Add(tempPlayerChar);
 	tempPlayerChar->ArrayNumbering = PlayerEndBattleArray.Num() - 1;
-	UE_LOG(LogClass, Log, TEXT("Start: %d  End : %d"), PlayerStartBattleArray.Num(), PlayerEndBattleArray.Num());
+
 }
 
 void ABattleController::ResetPlayerEndBattleArray()
@@ -632,10 +572,8 @@ void ABattleController::ResetPlayerEndBattleArray()
 	if (PlayerEndBattleArray.Num() == FriendlyCharacters.Num() - PlayerDeathCount)
 	{
 		PlayerStartBattleArray.Append(PlayerEndBattleArray); // 행동 끝낸 아군 캐릭터들을 다시 행동력을 채우고
-		//if(PlayerEndBattleArray.Num() != 0)
 		PlayerEndBattleArray.Empty();              // EndArray를 비운다
 
-		UE_LOG(LogClass, Log, TEXT("Start: %d  End : %d"), PlayerStartBattleArray.Num(), PlayerEndBattleArray.Num());
 	}
 }
 
@@ -644,45 +582,30 @@ void ABattleController::AddEnemyDeathCount()
 	EnemyDeathCount++;
 }
 
-void ABattleController::ResultBattle()
+void ABattleController::ResultBattle_PostInit()
 {
-	// BeCheck()
-	auto gameMode = UGameplayStatics::GetGameMode(this);
-
-	
-
-
-
-	// UI
-	//Cast<UExploreWidget>(Cast<ASquadGameMode>(gameMode)->GetExploreWidget())->BeHideTaskCanvas();
-	//
-
-	auto gameIns = GetWorld()->GetGameInstance();
-	Cast<USquadGameInstance>(gameIns)->SCMIns->zoomswitch();
-
-	Cast<USquadGameInstance>(gameIns)->SCMIns->IsBattleToExplore = true;
-	//Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetBattleInit(Cast<ABattleTrigger>(Cast<ASquadGameMode>(gameMode)->BTIns)->GetNeturalAreaLocation()); // 이 코드 수정해야할 필요가 있음
-	Cast<USquadGameInstance>(gameIns)->SCMIns->MoveSwitch = true;
-	//Cast<USquadGameInstance>(gameIns)->SCMIns->Control_SetBattleEnd();
-
-	//
+	// 전투 종료시 카메라 위치 제어
+	gameIns->SCMIns->zoomswitch();
+	gameIns->SCMIns->IsBattleToExplore = true;
+	gameIns->SCMIns->MoveSwitch = true;
 
 
-	//Cast<ASquadGameMode>(gameMode)->EndBattle();
-
+	// Sound 제어
 	BGMComp->FadeOut(3.f , 0.f);
 	BGMComp->SetSound(ExplorerSound);
 	BGMComp->FadeIn(2.f);
-
-	// 
 }
 
-void ABattleController::ResultBattle_temp()
+void ABattleController::ResultBattle_BattleEnd()
 {
 	if(IsBattleStart == true) { 
 
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+		// 전투 종료(플레이어 승리)시 탐색 상태로 변경
 
+		// 전투위젯 스킬 아이콘 비활성화
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+
+		// 아군 캐릭터 탐색 상태로 변경
 		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
 		{
 			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->BeReload_BattleOver();
@@ -696,21 +619,16 @@ void ABattleController::ResultBattle_temp()
 			Cast<UCharacterAnimInstance>(anim)->Set_IsBattle(false);
 			Cast<UCharacterAnimInstance>(anim)->Call_GetIsBattle();
 		}
-
-		auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-		//Cast<USquadGameInstance>(gameIns)->SCMIns->ControlValue_PlayerCharacterMovement_BeginPlay = true;
-
-
+		// 캐릭터 탐색 위치 초기화
 		gameIns->SCMIns->SetUnitPos_Last_Location(gameIns->SCMIns->FriendlyCharList.Num());
-
+		
 		ClearArray();
 
-		IsBattleStart = false;
-		Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->IsBattleStart = false;
+		SetIsBattleStart(false);
+		gameIns->IsBattleStart = GetIsBattleStart();
 
 		int32 LastUnit_Loc = gameIns->SCMIns->FriendlyCharList.Num();
-		//gameIns->SCMIns->UnitPos_First->SetWorldLocation(Cast<ABattleTrigger>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->BTIns)->Coordinate[3].MultiArray[2].pGrid->GetActorLocation());
-		//gameIns->SCMIns->UnitPos_Last->SetWorldLocation(Cast<ABattleTrigger>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->BTIns)->Coordinate[4-LastUnit_Loc].MultiArray[2].pGrid->GetActorLocation());
+
 		gameIns->BTIns = nullptr;
 
 		pTriggerBox->DeleteBattleTrigger();
@@ -722,9 +640,7 @@ void ABattleController::ResultBattle_temp()
 }
 
 void ABattleController::ChangeSelectedCharacter()
-{
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-		
+{		
 	if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->StateEnum == EStateEnum::SE_End) {
 		auto preSelectedCharacter = Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter);
 		preSelectedCharacter->SetHighLight(false);
@@ -735,8 +651,8 @@ void ABattleController::ChangeSelectedCharacter()
 			SetSelectedCharacter(Cast<APlayerSquadCharacter>(FriendlyCharacters[Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->numbering + 1]));
 				
 		SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->ArrayNumbering + 1]));
-		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
-		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+		SplayerController->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+		SplayerController->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
 
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->PlaySelectedSound();
@@ -754,10 +670,10 @@ void ABattleController::ChangeSelectedCharacter()
 
 				SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
 			
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+				SplayerController->SetpRayHitCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+				SplayerController->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
 				Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+				SplayerController->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 			
 				AddPlayerEndBattleArray(preSelectedCharacter);			
 			}
@@ -766,8 +682,8 @@ void ABattleController::ChangeSelectedCharacter()
 				preSelectedCharacter->SetHighLight(false);			
 			
 				SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->ArrayNumbering + 1]));
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
-				Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+				SplayerController->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+				SplayerController->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
 				Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 
 				AddPlayerEndBattleArray(preSelectedCharacter);			
@@ -787,8 +703,6 @@ void ABattleController::ChangeSelectedCharacter()
 
 void ABattleController::SystemChangeSelectedCharacter()
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	auto gameMode = UGameplayStatics::GetGameMode(this);
 
 	if (PlayerStartBattleArray.Num() > 1) {
 		if (PlayerStartBattleArray.Num() - 1 == Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->ArrayNumbering) {
@@ -796,10 +710,10 @@ void ABattleController::SystemChangeSelectedCharacter()
 			preSelectedCharacter->SetHighLight(false);
 
 			SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+			SplayerController->SetpRayHitCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+			SplayerController->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
 			Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+			SplayerController->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 			AddPlayerEndBattleArray(preSelectedCharacter);
 		}
 		else {
@@ -807,8 +721,8 @@ void ABattleController::SystemChangeSelectedCharacter()
 			preSelectedCharacter->SetHighLight(false);
 			
 			SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->ArrayNumbering + 1]));
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+			SplayerController->SetpRayHitCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
+			SplayerController->SetpRayHitSelectedCharacter(Cast<APlayerSquadCharacter>(GetSelectedCharacter()));
 			Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 
 			AddPlayerEndBattleArray(preSelectedCharacter);
@@ -819,11 +733,11 @@ void ABattleController::SystemChangeSelectedCharacter()
 			if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter)
 				Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 
-			if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-				Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+			if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+				Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 	}
 	else {
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->SetHighLight(false);
@@ -835,9 +749,6 @@ void ABattleController::SystemChangeSelectedCharacter()
 
 void ABattleController::ReverseControlChangeSelectedCharacter()
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	auto gameMode = UGameplayStatics::GetGameMode(this);
-
 	auto preSelectedCharacter = SystemState.SelectedCharacter;
 	int32 tempValue = 0;
 
@@ -876,20 +787,20 @@ void ABattleController::ReverseControlChangeSelectedCharacter()
 
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
+		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->GetStatustBarWidget()->SetBarRenderOpacity(1.f); // 임시
 
 		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter)
 			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 
 
-		if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 	}
 	else {
 		for (int i = 0; i < PlayerStartBattleArray.Num(); i++)	{
@@ -925,26 +836,24 @@ void ABattleController::ReverseControlChangeSelectedCharacter()
 		}
 
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
-		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		SplayerController->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
+		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->GetStatustBarWidget()->SetBarRenderOpacity(1.f); // 임시
 		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter)
 			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 	
-		if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 	}
 }
 
 void ABattleController::ControlChangeSelectedCharacter()
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	auto gameMode = UGameplayStatics::GetGameMode(this);
 	int32 tempValue = 0;
 
 	auto preSelectedCharacter = SystemState.SelectedCharacter;
@@ -987,21 +896,21 @@ void ABattleController::ControlChangeSelectedCharacter()
 
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
 		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
+		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->GetStatustBarWidget()->SetBarRenderOpacity(1.f); // 임시
 
 		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter)
 			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 
 
-		if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
 		
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 
 	}
 	else {
@@ -1017,7 +926,6 @@ void ABattleController::ControlChangeSelectedCharacter()
 		SetSelectedCharacter(Cast<APlayerSquadCharacter>(PlayerStartBattleArray[tempValue]));
 
 		Cast<ASquadCharacter>(preSelectedCharacter)->SetGridOff();
-		//Cast<ASquadCharacter>(preSelectedCharacter)->GetStatustBarWidget()->SetBarRenderOpacity(0.5f);
 		if (Cast<APlayerSquadCharacter>(preSelectedCharacter) == preSelectedCharacter) {
 			Cast<APlayerSquadCharacter>(preSelectedCharacter)->SetHighLight(false);
 			if (Cast<APlayerSquadCharacter>(preSelectedCharacter)->StateEnum != EStateEnum::SE_Death && Cast<APlayerSquadCharacter>(preSelectedCharacter)->StateEnum != EStateEnum::SE_End)
@@ -1036,20 +944,20 @@ void ABattleController::ControlChangeSelectedCharacter()
 		}
 
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
-		Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		Cast<ASquadGameMode>(gameMode)->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		SplayerController->EmptypRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->ClearCharacterInfoWidgetText(); // 아군 턴종료후 UI 초기화 함수
+		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->GetStatustBarWidget()->SetBarRenderOpacity(1.f); // 임시
 
 		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter)
 			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
 
-		if (Cast<ASquadGameMode>(gameMode)->GetCurrentWidget() == Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget()))
-			Cast<UBattleWidget>(Cast<ASquadGameMode>(gameMode)->GetCurrentWidget())->ClearWidget_SkillPart();
+		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 				
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Init_SkillButtonColor();
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
 	}
 }
 
@@ -1078,7 +986,6 @@ void ABattleController::SetSkillTargeting(bool IsAttackSkill)
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->SetHighLight(true);
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->SetGridColor(FColor::Blue);
 	}
-
 }
 
 void ABattleController::SetDisableSkillTargeting(bool IsAttackSkill)
@@ -1094,5 +1001,4 @@ void ABattleController::SetDisableSkillTargeting(bool IsAttackSkill)
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->SetHighLight(false);
 		Cast<APlayerSquadCharacter>(GetSelectedCharacter())->SetGridColor(FColor::Green);
 	}
-
 }

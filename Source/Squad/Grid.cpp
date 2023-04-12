@@ -6,20 +6,11 @@
 // Sets default values
 AGrid::AGrid()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Plane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Plane"));
 	SetRootComponent(Plane);
 
-	/*
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>Plane_Body(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane'"));
-	if (Plane_Body.Succeeded())
-	{
-		Plane->SetStaticMesh(Plane_Body.Object);
-	}
-	*/
-	
 	static ConstructorHelpers::FObjectFinder<UMaterial> M_White(TEXT("Material'/Game/BLUEPRINT/GridColorIns/M_White.M_White'"));
 	if (M_White.Object != NULL)
 	{
@@ -60,16 +51,13 @@ AGrid::AGrid()
 	if(M_TRANSPARENCY.Succeeded())
 	{
 		TransparencyMaterial = (UMaterial*)M_TRANSPARENCY.Object;
-	}
-	
+	}	
 }
 
 // Called when the game starts or when spawned
 void AGrid::BeginPlay()
 {
-	Super::BeginPlay();
-
-	
+	Super::BeginPlay();	
 }
 
 void AGrid::SetGridState()
@@ -105,7 +93,7 @@ void AGrid::SetGridInfo()
 	SetGridInfo_Material_InitInfo();
 }
 
-void AGrid::SetGridInfo_Material()
+void AGrid::SetGridInfo_Material_Init()
 {
 	if (GridInfo.GOTO == EGridOntheObject::Normal)
 	{

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Squad.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
 #include "GridManager.generated.h"
@@ -10,9 +10,9 @@
 UENUM(BlueprintType)
 enum class EEventBoxState : uint8
 {
-	TE_TypeA UMETA(DisplayName = "Type A"),
-	TE_TypeB UMETA(DisplayName = "Type B"),
-	TE_TypeC UMETA(DisplayName = "Type C"),
+	FrindlyArea UMETA(DisplayName = "FrindlyArea"),
+	NeturalArea UMETA(DisplayName = "NeturalArea"),
+	EnemyArea UMETA(DisplayName = "EnemyArea"),
 	TE_TypeD UMETA(DisplayName = "Type D"),
 };
 
@@ -22,36 +22,49 @@ class SQUAD_API AGridManager : public AActor
 {
 	GENERATED_BODY()
 	
-public:
-	// Sets default values for this actor's properties
+
 	AGridManager();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class UBoxComponent* BoxColiision;
-
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void Tick(float DeltaTime) override;
 
+	void SetEnemyCharacterStatData(class AEnemySquadCharacter* EnemyCharacter, int32 BrunchNum);
+
+	int32 SetEnemyStatRand();
+
+	TSubclassOf<AActor> GetRandObstacleInArray();
+
+	int32 numberOfEnemyCharacter = 0;
+	int32 numberOfObstacle = 0;
 
 public:
 
 	void InitGrid();
-
 	void InitGrid_Boss();
 
+	UFUNCTION()
+		void DeleteEventBox();
 
+	void SetGridVisible();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	void Spawned_Enemy();
+	void Spawned_Enemy_Boss();
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		class UBoxComponent* BoxColiision;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pro, meta = (AllowPrivateAccess = "true"))
 		bool IsSetInit = false;
+	
 
-	// ���� ����
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pro, meta = (AllowPrivateAccess = "true"))
-		int32 Xnumber;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Coordinate")
+		int32 EventBoxNumber;
+
+	// Grid
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grid")
 		TSubclassOf<AActor> GridToSpawn;
@@ -61,21 +74,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
 		TSubclassOf<AActor> EnemyCharacterToSpawn;
 
-	//
+	// Obstacle
 
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
 		TSubclassOf<AActor> ObstacleToSpawn;
 
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnData")
 		TArray<TSubclassOf<AActor>> ObstacleToSpawnArray;
-
-	UFUNCTION()
-		TSubclassOf<AActor> GetRandObstacleInArray();
-
-	void SetEnemyCharacterStatData(class AEnemySquadCharacter* EnemyCharacter, int32 BrunchNum);
-
-	int32 SetEnemyStatRand();
-
+	   	  
 	// EventObject
 
 	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
@@ -96,15 +102,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "EventObject")
 		float ObjectToSpawnLocZPos;
 
-
-	UPROPERTY()
-		int32 numberOfEnemyCharacter = 0;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnData")
 		int32 MaxnumberOfEnemyCharacter;
 
-	UPROPERTY()
-		int32 numberOfObstacle = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SpawnData")
 		int32 MaxnumberOfObstacle;
@@ -115,29 +115,20 @@ public:
 
 	// Y
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
-		int Depth; 
+		int Depth;
 
-	// min��ġ ���� �Ʊ� ����
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
-		int MinRestriction;
-
-	// �Ʊ��������� ���� Max��ġ���� �߸�����
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
-		int MaxRestriction;
-
+	// GridManger 상태(아군,중립,적군)
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Grid")
 	EEventBoxState EBState;
 
-	UFUNCTION()
-	void DeleteEventBox();
+	TArray<AActor*> SpawnGrids;
+	TArray<AActor*> SpawnObtacle;
 
-	void SetGridVisible();
+	class ABattleTrigger* parentBattleTrigger;
 
-public:
+	TArray<class AGrid*> YGridArray;
+	TArray<TArray<class AGrid*>> XGridArray;
 
-	void Spawned_Enemy();
-
-	void Spawned_Enemy_Boss();
 
 private:
 	
@@ -148,8 +139,6 @@ private:
 	int32 Obstacle_XPosCount_Enemy = 10;
 	bool Obstacle_YPosSwitch = false;
 
-
-
 	void Spawned_ObstacleCheck();
 
 	void Spawned_EventObject();
@@ -158,29 +147,13 @@ private:
 	FVector ObstacleLocCorrectionValue;
 	FVector ObstacleScaleCorrectionValue;
 
-public:
-
-	TArray<AActor*> SpawnGrids;
-	TArray<AActor*> SpawnObtacle;
-
-
-public:
-
-	class ABattleTrigger* parentBattleTrigger;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Coordinate")
-	int32 EventBoxNumber;
-
-	TArray<class AGrid*> YGridArray;
-	TArray<TArray<class AGrid*>> XGridArray;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true")
 		int32 gameDifficultyValue;
-
-		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-			int32 XPosLocRandValue;
-		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true")
+		int32 XPosLocRandValue;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true")
 		int32 Obstacle_YPosRand_First = 0;
-		UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, meta = (AllowPrivateAccess = "true")
 		int32 Obstacle_YPosRand_Second = 0;
+
 };

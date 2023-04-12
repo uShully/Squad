@@ -151,7 +151,6 @@ void ASquadCameraManager::Tick(float DeltaTime)
 void ASquadCameraManager::SetFrindlyCharList(TArray<AActor*> CharList)
 {
 	FriendlyCharList.Append(CharList);
-	//UGameplayStatics::GetAllActorsOfClass(this, APlayerSquadCharacter::StaticClass(), FriendlyCharList);
 	SortFrindlyCharList();
 }
 
@@ -281,8 +280,6 @@ void ASquadCameraManager::Control_SetBattleCameraLocation(float DeltaTime)
 				MoveSwitch = false;
 				IsBattleToExplore = false;
 				UnitPos_First->SetRelativeLocation(UnitPos_First_RelativeLocation);
-				//UnitPos_Last->SetRelativeLocation(UnitPos_Last_RelativeLocation);
-				//ControlValue_PlayerCharacterMovement_BeginPlay = false;
 			}
 		}
 	}

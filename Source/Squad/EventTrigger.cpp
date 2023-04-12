@@ -8,7 +8,7 @@
 AEventTrigger::AEventTrigger()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("EventCollision"));
 	BoxCollision->SetBoxExtent(FVector(32.f, 32.f, 32.f));
@@ -58,10 +58,6 @@ void AEventTrigger::InitEventBox()
 		auto ActorLoc = SpawnedActorRef->GetActorLocation();
 		SpawnedActorRef->SetActorLocation(ActorLoc + FVector(-1320.f, 0.f, 0.f));
 	}
-
-	auto ETLoc = GetActorLocation();
-	//SetActorLocation(ETLoc + FVector(-1320.f * numberOfBox, 0.f, 0.f));
-
 }
 
 void AEventTrigger::CreateLastBattleStage()
@@ -79,9 +75,7 @@ void AEventTrigger::CreateEventSpot()
 {
 	FActorSpawnParameters SpawnParamsBoss;
 	FVector Loc(this->GetActorLocation().X - numberOfBox * 3600.f -580.f, this->GetActorLocation().Y + 360, this->GetActorLocation().Z);
-
-
-	AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(EventSpotToSpawn, Loc, this->GetActorRotation(), SpawnParamsBoss);
-	SpawnBox.Add(SpawnedActorRef);
 	
+	AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(EventSpotToSpawn, Loc, this->GetActorRotation(), SpawnParamsBoss);
+	SpawnBox.Add(SpawnedActorRef);	
 }

@@ -8,6 +8,7 @@
 #include "PlayerSquadCharacter.h"
 #include "BattleTrigger.generated.h"
 
+// 일반or보스 구분용 enum
 UENUM(BlueprintType)
 enum class EBattleTriggerState : uint8
 {
@@ -15,6 +16,7 @@ enum class EBattleTriggerState : uint8
 	Boss UMETA(DisplayName = "Boss"),
 };
 
+// 좌표 정보 구조체
 USTRUCT()
 struct FCoordinate {
 
@@ -67,112 +69,38 @@ class SQUAD_API ABattleTrigger : public AActor
 {
 	GENERATED_BODY()
 
-		ABattleTrigger();
+	ABattleTrigger();
 
 public:	
 	// Sets default values for this actor's properties
 
 	void InitBT();
-protected:
-	// Called when the game starts or when spawned
-	void SetEvent();
+
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly , Category = "Stage")
-	bool eventState; // 1 = battle , 0 = explorer
-
-	class USquadGameInstance* gameIns;
-
 public:	
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-		class UBoxComponent* BoxColiision;
-
-	UFUNCTION()
-	void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	TArray<AActor*> EnemyTriggerList;
-
 	UPROPERTY()
 	TArray<AActor*> EnemyList;
 
 	void StartBattleEvent();
 	void StartBattleEvent_Boss();
 	void InitBattleSetting();
-
-	bool OverlapSwitch = false;
-
-	TArray<AActor*> pGridManagerArray;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
-	class AGridManager* pGridManager;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-	FName StageName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-	FName EnemyName;
-
-	void EndBattle();
-
+	void EndBattle();	
+	
 	UFUNCTION()
-	void InitBattleBox();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-		int32 numberOfBox;
-
-	// EventBox = GridManager
-	UPROPERTY(EditDefaultsOnly, Category = "Stage")
-	TSubclassOf<AActor> EventBoxToSpawn;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Stage")
-	TSubclassOf<AActor> EventSpotToSpawn;
-
-	void SpawnedEventSpot();
-
-	UFUNCTION()
-		void DeleteBattleTrigger();
-
+		void DeleteBattleTrigger();		
+	
 	void BattleTrigger_PlayerSpreadOut();
-
-	void BattleTrigger_PlayerSetRotator();
-
-	//UFUNCTION()
-	//void SetEventBoxState(EEventBoxState EventBoxState);
-
-	TArray<APlayerSquadCharacter*> BattleTrigger_FrindlyCharacterList;
-
 	void DeleteEnemyCharacter();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
-		float BT_MG_MaxNumberOfObstacle_Enemy;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
-		float BT_MG_MaxNumberOfObstacle_Neutral;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
-		float BT_MG_MaxNumberOfObstacle_Player;
 
 	bool GetEventState();
 
-	void InitBattleBox_Boss();
-
-private:
-
-	TArray<AActor*> SpawnGridManger;
-
-	int32 SpawndBoxCout = 0;
-	int32 PlayerAreaCout = 0;
-	int32 NeutralAreaCout = 0;
-	int32 EnemyAreaCout = 0;
+	FVector GetNeturalAreaLocation();
 
 public:
 
-	// Coordinate //
-
-
-	//FCoordinate CoordinateSystem[20][4];
-	
-	TArray<FCoordinate> Coordinate;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		class UBoxComponent* BoxColiision;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AreaSetting")
 		int32 Number_PlayerAreaCout;
@@ -183,10 +111,66 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AreaSetting")
 		int32 Number_EnemyAreaCout;
 
-	AActor* tempGrid;
-	FVector GetNeturalAreaLocation();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Enemy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Neutral;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Obstacle")
+		float BT_MG_MaxNumberOfObstacle_Player;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
+		class AGridManager* pGridManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+		FName StageName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+		FName EnemyName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+		int32 numberOfBox;
+
+	// EventBox = GridManager
+	UPROPERTY(EditDefaultsOnly, Category = "Stage")
+		TSubclassOf<AActor> EventBoxToSpawn;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stage")
+		TSubclassOf<AActor> EventSpotToSpawn;
 
 	UPROPERTY(EditAnywhere)
-	EBattleTriggerState BTState;
+		EBattleTriggerState BTState;
+
+
+	TArray<FCoordinate> Coordinate;
+
+
+private:
+
+	TArray<AActor*> SpawnGridManger;
+	TArray<APlayerSquadCharacter*> BattleTrigger_FrindlyCharacterList;
+
+	int32 SpawndBoxCout = 0;
+	int32 PlayerAreaCout = 0;
+	int32 NeutralAreaCout = 0;
+	int32 EnemyAreaCout = 0;
+	
+	AActor* NeturalCenterGrid;
+
+	void SpawnedEventSpot();
+
+	void InitBattleBox();
+	void InitBattleBox_Boss();
+
+protected:
+	// Called when the game starts or when spawned
+	void SetEvent();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
+		bool eventState; // 1 = battle , 0 = explorer
+
+	class USquadGameInstance* gameIns;
+
 
 };

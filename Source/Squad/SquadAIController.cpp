@@ -94,9 +94,9 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 			BehindGrid = Cast<AGrid>(gameIns->BTIns->Coordinate[tempGrid->XPos].MultiArray[i].pGrid);
 			FVector SpreadLoc = BehindGrid->GetActorLocation();
 			tempGrid->GridInfo.GOTO = EGridOntheObject::Normal;
-			tempGrid->SetGridInfo_Material();
+			tempGrid->SetGridInfo_Material_Init();
 			BehindGrid->GridInfo.GOTO = EGridOntheObject::Player;
-			BehindGrid->SetGridInfo_Material();
+			BehindGrid->SetGridInfo_Material_Init();
 			PlayerChar->SetUnderGrid(BehindGrid);
 
 			//PlayerChar->Character_BattleRotator_Start = true;

@@ -22,7 +22,6 @@
 // Sets default values
 ABattleTrigger::ABattleTrigger()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	BoxColiision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
@@ -30,9 +29,6 @@ ABattleTrigger::ABattleTrigger()
 	BoxColiision->SetCollisionProfileName("Trigger");
 
 	RootComponent = BoxColiision;
-
-	//BoxColiision->OnComponentBeginOverlap.AddDynamic(this, &ABattleTrigger::OnOverlapBegin);
-
 }
 
 
@@ -47,53 +43,38 @@ void ABattleTrigger::InitBT()
 	else if (BTState == EBattleTriggerState::Boss) {
 		eventState = 1;
 		InitBattleBox_Boss();
-	}
-	
-}
-
-void ABattleTrigger::OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-
+	}	
 }
 
 void ABattleTrigger::StartBattleEvent()
 {
-		auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;		
-		auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
+	auto SCMIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->SCMIns;		
+	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
 
-		
-
-		for (int32 i = 0; i < SCMIns->FriendlyCharList.Num(); i++)
-		{
-			auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
-			Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation()); // 뒤로 가게하는 범인
+	for (int32 i = 0; i < SCMIns->FriendlyCharList.Num(); i++)
+	{
+		auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
+		Cast<ASquadAIController>(Controller)->PlayerCharater_MoveLoc(Coordinate[3 - i].MultiArray[2].pGrid->GetActorLocation()); // 뒤로 가게하는 범인
 			
-			
-			Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
-			Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
-			Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
-			BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
-		}
+		Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
+		Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material_Init();
+		Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
+		BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
+	}
 
-		if (pGridManager != nullptr)
-			pGridManager->InitGrid();
+	if (pGridManager != nullptr)
+		pGridManager->InitGrid();
 		
-		gameIns->BTIns = this;
-		gameMode->ViewDecisionWidget();
-		Cast<UDecisionWidget>(gameMode->GetCurrentSubWidget())->SetResult(eventState);
-
-
+	gameIns->BTIns = this;
+	gameMode->ViewDecisionWidget();
+	Cast<UDecisionWidget>(gameMode->GetCurrentSubWidget())->SetResult(eventState);
 }
 
 void ABattleTrigger::StartBattleEvent_Boss()
 {
 	auto SCMIns = gameIns->SCMIns;
-
-
 	auto gameMode = Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode());
-
-
-
+	   
 	for (int32 i = 0; i < SCMIns->FriendlyCharList.Num(); i++)
 	{
 		auto Controller = Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController();
@@ -101,7 +82,7 @@ void ABattleTrigger::StartBattleEvent_Boss()
 
 
 		Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->GridInfo.GOTO = EGridOntheObject::Player;
-		Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material();
+		Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid)->SetGridInfo_Material_Init();
 		Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->SetUnderGrid(Cast<AGrid>(Coordinate[3 - i].MultiArray[2].pGrid));
 		BattleTrigger_FrindlyCharacterList.Add(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i]));
 	}
@@ -109,16 +90,13 @@ void ABattleTrigger::StartBattleEvent_Boss()
 	if (pGridManager != nullptr)
 		pGridManager->InitGrid();
 
-
 	gameIns->BTIns = this;
 	gameMode->ViewDecisionBossWidget();
 	Cast<UDecisionWidget>(gameMode->GetCurrentSubWidget())->SetBossResult();
-
 }
 
 void ABattleTrigger::InitBattleSetting()
 {
-
 	gameIns->BCIns->InitBattleSetting(EnemyList, this);
 
 	for(int32 i = 0 ; i < SpawnGridManger.Num() ; i++)
@@ -148,30 +126,69 @@ void ABattleTrigger::InitBattleBox()
 		Cast<AGridManager>(SpawnedActorRef)->EventBoxNumber = i;
 
 		if (PlayerAreaCout < Number_PlayerAreaCout) {
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeA;
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::FrindlyArea;
 			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Player;
 			PlayerAreaCout++;
 		}
 		else if (NeutralAreaCout < Number_NeutralAreaCout) {
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeB;
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::NeturalArea;
 			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Neutral; 
 			NeutralAreaCout++;
 
-			tempGrid = SpawnedActorRef;
+			NeturalCenterGrid = SpawnedActorRef;
 		}
 		else if (EnemyAreaCout < Number_EnemyAreaCout){
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeC;
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::EnemyArea;
+			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Enemy;
+			EnemyAreaCout++;
+		}
+
+		Cast<AGridManager>(SpawnedActorRef)->InitGrid();		
+	}
+	SpawnedEventSpot();
+}
+
+void ABattleTrigger::InitBattleBox_Boss()
+{
+	BoxColiision->SetBoxExtent(FVector(450.0f * numberOfBox, 900.f, 600.f));
+
+	FActorSpawnParameters SpawnParams;
+	// 시작시 저장하는 정보 
+	// 1. EventBox 정보 :: SpawnGridManger 
+	for (int i = 0; i < numberOfBox; i++)
+	{
+		FVector Loc(this->GetActorLocation().X - i * 900.f, this->GetActorLocation().Y, this->GetActorLocation().Z);
+
+		AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(EventBoxToSpawn, Loc, this->GetActorRotation(), SpawnParams);
+		SpawnGridManger.Add(SpawnedActorRef);
+
+		// GridManager = EventBox
+		Cast<AGridManager>(SpawnedActorRef)->parentBattleTrigger = this;
+		Cast<AGridManager>(SpawnedActorRef)->EventBoxNumber = i;
+
+		if (PlayerAreaCout < Number_PlayerAreaCout) {
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::FrindlyArea;
+			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Player;
+			PlayerAreaCout++;
+		}
+		else if (NeutralAreaCout < Number_NeutralAreaCout) {
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::NeturalArea;
+			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Neutral;
+			NeutralAreaCout++;
+
+			NeturalCenterGrid = SpawnedActorRef;
+		}
+		else if (EnemyAreaCout < Number_EnemyAreaCout) {
+			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::EnemyArea;
 			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Enemy;
 			EnemyAreaCout++;
 		}
 
 		//SetEventBoxState(Cast<AGridManager>(SpawnedActorRef)->EBState);
 
-		Cast<AGridManager>(SpawnedActorRef)->InitGrid();
-		
-	}
+		Cast<AGridManager>(SpawnedActorRef)->InitGrid_Boss();
 
-	// Spawnd event spot
+	}
 
 	SpawnedEventSpot();
 }
@@ -186,17 +203,13 @@ void ABattleTrigger::SpawnedEventSpot()
 }
 
 void ABattleTrigger::DeleteBattleTrigger()
-{
-	
+{	
 	if(SpawnGridManger.Num() > 0) {
 		for(int i = 0 ; i < SpawnGridManger.Num() ; i++)
 		{
 			Cast<AGridManager>(SpawnGridManger[i])->DeleteEventBox();
 		}
-	}
-	
-
-	
+	}	
 
 	Destroy();
 }
@@ -209,36 +222,23 @@ void ABattleTrigger::DeleteEnemyCharacter()
 	{
 		auto Char = EnemyList.Pop();
 		Char->Destroy();
-		UE_LOG(LogClass, Log, TEXT(" List Num : %d"), EnemyList.Num());
 	}
 }
 
 void ABattleTrigger::BattleTrigger_PlayerSpreadOut()
 {
 	auto SCMIns = gameIns->SCMIns;
-	
-
 
 	for (int32 i = 0; i < SCMIns->FriendlyCharList.Num(); i++)
 	{
 		auto PlayerController = Cast<ASquadAIController>(Cast<APlayerSquadCharacter>(SCMIns->FriendlyCharList[i])->GetController());
-		PlayerController->PlayerCharacter_SpreadOut();
-
-	
+		PlayerController->PlayerCharacter_SpreadOut();	
 	}
-
-	
-
-}
-
-void ABattleTrigger::BattleTrigger_PlayerSetRotator()
-{
-
 }
 
 FVector ABattleTrigger::GetNeturalAreaLocation()
 {
-	FVector tempGetValue = tempGrid->GetActorLocation();
+	FVector tempGetValue = NeturalCenterGrid->GetActorLocation();
 	
 	FVector PlayerAreaCenter = Coordinate[2].MultiArray[2].pGrid->GetActorLocation();
 	FVector NeturalAreaCenter = Coordinate[7].MultiArray[2].pGrid->GetActorLocation();
@@ -271,9 +271,7 @@ void ABattleTrigger::SetEvent()
 	}
 	else if (randfloat > totalProb && randfloat <= 100.f) {
 		eventState = 0; // 비전투
-	}
-	
-	//eventState = 1;
+	}	
 }
 
 bool ABattleTrigger::GetEventState()
@@ -281,50 +279,3 @@ bool ABattleTrigger::GetEventState()
 	return eventState;
 }
 
-void ABattleTrigger::InitBattleBox_Boss()
-{
-	BoxColiision->SetBoxExtent(FVector(450.0f * numberOfBox, 900.f, 600.f));
-
-	FActorSpawnParameters SpawnParams;
-	// 시작시 저장하는 정보 
-	// 1. EventBox 정보 :: SpawnGridManger
-	// 2. 
-	for (int i = 0; i < numberOfBox; i++)
-	{
-		FVector Loc(this->GetActorLocation().X - i * 900.f, this->GetActorLocation().Y, this->GetActorLocation().Z);
-
-		AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(EventBoxToSpawn, Loc, this->GetActorRotation(), SpawnParams);
-		SpawnGridManger.Add(SpawnedActorRef);
-
-		// GridManager = EventBox
-		Cast<AGridManager>(SpawnedActorRef)->parentBattleTrigger = this;
-		Cast<AGridManager>(SpawnedActorRef)->EventBoxNumber = i;
-
-		if (PlayerAreaCout < Number_PlayerAreaCout) {
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeA;
-			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Player;
-			PlayerAreaCout++;
-		}
-		else if (NeutralAreaCout < Number_NeutralAreaCout) {
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeB;
-			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Neutral;
-			NeutralAreaCout++;
-
-			tempGrid = SpawnedActorRef;
-		}
-		else if (EnemyAreaCout < Number_EnemyAreaCout) {
-			Cast<AGridManager>(SpawnedActorRef)->EBState = EEventBoxState::TE_TypeC;
-			Cast<AGridManager>(SpawnedActorRef)->MaxnumberOfObstacle = BT_MG_MaxNumberOfObstacle_Enemy;
-			EnemyAreaCout++;
-		}
-
-		//SetEventBoxState(Cast<AGridManager>(SpawnedActorRef)->EBState);
-
-		Cast<AGridManager>(SpawnedActorRef)->InitGrid_Boss();
-
-	}
-
-	// Spawnd event spot
-
-	SpawnedEventSpot();
-}

@@ -338,8 +338,11 @@ public:
 	bool IsBattleStart = false;
 
 	// 주요 객체 저장
+	// 배틀 컨트롤러
 	ABattleController* BCIns;
+	// 카메라 매니저
 	ASquadCameraManager* SCMIns;
+	// 배틀 트리거
 	class ABattleTrigger* BTIns;
 
 	AActor* TargetCharacter;

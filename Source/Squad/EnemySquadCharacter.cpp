@@ -171,15 +171,7 @@ void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 	
 		LifeBar->SetHiddenInGame(true);
 	
-		gameIns->BCIns->AddEnemyDeathCount(); // [BUG] 임시조치
-		/* [BUG] 2022.11.09 버그 발생 지점
-		if (Fun_Death.IsBound())
-		{
-			Fun_Death.Execute();
-		}
-
-		Fun_Death.Unbind();
-		*/
+		gameIns->BCIns->AddEnemyDeathCount(); // [BUG] 발생했던 지점
 
 	}
 
@@ -249,7 +241,7 @@ void AEnemySquadCharacter::Enemy_TurnEnd()
 	IsCharacterUseAttack = false;
 	tempTargetCharacter = nullptr;
 	//GetStatustBarWidget()->SetBarRenderOpacity(0.5f);
-	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->WorkEnemyAI();
+	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->ActiveEnemyAI();
 }
 
 void AEnemySquadCharacter::CharacterSkill_Reload()

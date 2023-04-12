@@ -34,9 +34,23 @@ class SQUAD_API AGrid : public AActor
 {
 	GENERATED_BODY()
 
+	AGrid();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Grid, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Plane;
+public:
+	struct GridInfomation {
 
+		int32 XPos;
+		int32 YPos;
+
+		// HaveTurnCharacter�� SelectedCharacter�� ����
+		AActor* GridOnTheCharacter;
+		EGridOntheObject GOTO;
+
+		void init() { XPos = 0; YPos = 0; GridOnTheCharacter = nullptr; }
+
+	};
 protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Color, meta = (AllowPrivateAccess = "true"))
@@ -59,40 +73,21 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Color, meta = (AllowPrivateAccess = "true"))
 	UMaterial* 	TransparencyMaterial;
-
-	/*
-
-	UMaterialInstanceDynamic* ExampleMID = UMaterialInstanceDynamic::Create(UMaterialInterface* Exp, )
-	ExampleStaticMesh->SetMaterial(ExampleMID, 0);  
-	FLinearColor Red(FLineaerColor::Red);  
-	ExampleMID->SetVectorParameter("ParameterName", Red);  
-	*/
-
-
-
-public:
-	// Sets default values for this actor's properties
-	AGrid();
-
+	
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void BeginPlay() override;
 
-
-private:
-
-	//class UStaticMeshComponent* GetPlane() const { return Plane; }
-
-		
-	//
-
+	void SetGridState_Material();
+	void SetGridInfo();
+	
 public:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Grid, meta = (AllowPrivateAccess = "true"))
-	int XPos;
+		int XPos;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Grid, meta = (AllowPrivateAccess = "true"))
-	int YPos;
+		int YPos;
 
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Grid, meta = (AllowPrivateAccess = "true"))
@@ -101,35 +96,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = Grid, meta = (AllowPrivateAccess = "true"))
 	EGridState GridState;
 
-	struct GridInfomation {
 
-		int32 XPos;
-		int32 YPos;
-
-		// HaveTurnCharacter�� SelectedCharacter�� ����
-		AActor* GridOnTheCharacter;
-		EGridOntheObject GOTO;
-
-		void init() { XPos = 0; YPos = 0; GridOnTheCharacter = nullptr; }
-
-	};
-
-	
 	GridInfomation GridInfo;
 
+	class AGridManager* parentEventBox;
+public:
+ 
+	// GridManger 초기화용 함수
 	void SetGridState();
-	void SetGridInfo();
 
-	void SetGridInfo_Material();
-	//
+	// Grid 색 변환 함수
+	void SetGridInfo_Material_Init();
 	void SetGridInfo_Material_InitInfo();
 	void SetGridInfo_Material_Black();
 	void SetGridInfo_Material_Red();
 	void SetGridInfo_Material_Blue();
 	void SetGridInfo_Material_Green();
-	//
-
-
+	   
 	UFUNCTION()
 	void DeleteGrid();
 
@@ -138,14 +121,5 @@ public:
 
 	UFUNCTION()
 	void InitGrid();
-
-private:
-
-	void SetGridState_Material();
-
-public:
-
-	class AGridManager* parentEventBox;
-
 	
 };
