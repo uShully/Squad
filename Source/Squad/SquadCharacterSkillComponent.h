@@ -63,23 +63,17 @@ class SQUAD_API USquadCharacterSkillComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	USquadCharacterSkillComponent();
-	void InitCharacterSkill();
-	
-protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	
 
-public:	
-	
 	void UseCharacterSkill(int32 skillNum, AActor* TargetCharacter);
-	void SetCharacterData(int32 classNum, AActor* Owner);
+	void InitCharacterSkillComp(int32 classNum, AActor* Owner);
 
 	int32 GetSkill1Cooldown() { return Skill1Cooldown; };
 	int32 GetSkill2Cooldown() { return Skill2Cooldown; };	
 
-	FPlayerSkillData* GetSkill1Data() { return Skill1Data; };
+	//FPlayerSkillData* GetSkill1Data() { return Skill1Data; };
 
 	void Calc_SkillData(AActor* Target, int32 SkillNumber);
 
@@ -90,30 +84,25 @@ private:
 	int32 Skill1Cooldown = 0;
 	int32 Skill2Cooldown = 0;
 
+	// 스킬 데이터 초기화 // 
+	void InitCharacterSkillData();
 
-
+	// 스킬 데이터 계산 호출 함수 //
 	void Get_SkillDataForUse(int32 skillNum, AActor * Target);
 
+	// 스킬 데미지 계산, 패시브 특수 능력 계산 함수
 	float Skill_DamageCalc(int32 skillNum, AActor * Target);
-
 	void Skill_Specialability(int32 skillNum, AActor * Target);
+	float Skill_ActualDamage = 0.f;	
 
+	// 액티브 특수 능력 
 	TArray<AActor*> RangeAttackSkill_AdjacentTarget(AActor * targetCharacter);
-
-
-		
-	
-	FPlayerSkillData *Skill1Data;
-	FPlayerSkillData *Skill2Data;
-
-	float Skill_ActualDamage = 0.f;
-
-	TMap<int32, FPlayerSkillData> SkillDataMap;
 
 private:
 	TArray<struct FSkillValueList*> SkillArray;
 
 public:
+	// DT에서 스킬 능력치 호출
 	FSkillValueList* Get_Skill0Data();
 	FSkillValueList* Get_Skill1Data();
 	FSkillValueList* Get_Skill2Data();

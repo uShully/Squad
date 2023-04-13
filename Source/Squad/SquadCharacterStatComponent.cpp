@@ -49,14 +49,10 @@ USquadCharacterStatComponent::USquadCharacterStatComponent()
 }
 
 
-// Called when the game starts
 void USquadCharacterStatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	// ...
-	
 }
 
 
@@ -64,8 +60,7 @@ void USquadCharacterStatComponent::BeginPlay()
 void USquadCharacterStatComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	//SetWeaponNum(WeaponNum);
-	// ...
+
 }
 
 
@@ -84,7 +79,7 @@ void USquadCharacterStatComponent::SetClassData(int32 ClassNum)
 		Character_EvasionCorrectionValue = CurrentBrunchStatData->EvasionCorrectionValue;
 		Character_HPValue = CurrentBrunchStatData->HPValue;
 		auto FBN = FText::FromStringTable("/Game/DATATABLE/BrunchNameData.BrunchNameData", FString::Printf(TEXT("%d"), Character_BrunchNumber));
-		Character_BrunchName = FBN;//CurrentBrunchStatData->BrunchName;
+		Character_BrunchName = FBN; //CurrentBrunchStatData->BrunchName;
 	}
 
 
@@ -112,8 +107,6 @@ void USquadCharacterStatComponent::SetWeaponData(int32 WeaponNumber)
 		WeaponAvoidence = CurrentStatData->WeaponAvoidence;
 		auto Actor = Cast<APlayerSquadCharacter>(GetOwner());
 		Actor->SetContentMesh(Actor->WeaponSlot, *WeaponContentPath);
-		//Actor->Calc_Damage_distribution();
-
 		
 		if (Character_EquipWeaponName == "Rifle") {
 			Actor->GetMesh()->SetAnimInstanceClass(RifleAnimBP);
@@ -155,21 +148,6 @@ void USquadCharacterStatComponent::SetBranchStat()
 	int32 ClassNumber = Actor->ClassNum;
 
 	CurrentBrunchStatData = SquadGameIns->GetBrunchData(ClassNumber);
-}
-
-void USquadCharacterStatComponent::SetDamage(float NewDamage)
-{
-	// CurrentHP = FMath::Clamp<float>(CurrentHP - NewDamage, 0.f, CurrentStatData->MaxHP);
-	// if(CurrentHP <= 0.f)
-	//{
-	//	OnHPIsZero.Broadcast();
-	//}
-}
-
-float USquadCharacterStatComponent::GetAttack()
-{
-	// return CurrentStatData->Attack
-	return 0.f;
 }
 
 ////////////////////////////////////////////////////////////

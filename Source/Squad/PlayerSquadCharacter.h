@@ -55,33 +55,53 @@ public:
 
 public:	 
 
-	void SetShotReady();
-	void Debug_Shot(ASquadCharacter* Target);
-
-	UFUNCTION(BlueprintCallable)
-	void BeShot();
-
-	void SetMoveReady();
-
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void PlayerDeath(class UCharacterAnimInstance* CharAnimInst);
 
+	// 캐릭터 상태 변환
 	void SetCoverReady();
+	void SetShotReady();
+	void SetReloadReady();
+	void SetStayReady();
 
-	void SetCover();
-
-	void SetStay();
+	// 행동 초기화 및 애니메이션 재생
+	void SetShot(ASquadCharacter* Target);
 	void SetSkill1();
 	void SetSkill2();
+	void SetCover();	   
 
+	// 전투 시 재장전
+	void BeReload();
+	// 전투 종료시 재장전
+	void BeReload_BattleOver();
+	// 일반 사격 데미지 계산함수
+	UFUNCTION(BlueprintCallable)
+		void BeShot();
+
+	// 사격,스킬 데미지 이항분포 계산 , 확률 배열에 저장
+	void Calc_Damage_distribution(ASquadCharacter* TargetEvasionCorrection);
+	TArray<float> Damage_distribution; // 데미지 판별용
+	TArray<float> Damage_distribution_float; // 데미지 확률표 표기용
+
+	void Calc_SkillDamage_distribution(ASquadCharacter* Target, struct FSkillValueList* CompSkillData);
+	TArray<float> SkillDamage_distribution;
+	TArray<float> SkillDamage_distribution_float;
+
+	// 이항분포 계산식 변수
+	float SkillMaxDamage_InDamageDis = 0.f;
+	float MaxDamage_InDamageDis = 0.f;
+
+private:
+	// 팩토리얼 함수 //
+	int factorial(int n);
+
+public:
 
 	UFUNCTION(BlueprintCallable, Category = "TurnSystem")
 	void SetCharacterEnd();
 	
 	void PlaySelectedSound();
-
-	void InputTest();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Numbering")
 	int32 numbering;
@@ -97,51 +117,45 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
 	int32 BattleLineNumber;
 
-	// 버프 시스템 초기
+	int32 ClassNum;
+	/////////////////////////
 
+	// 버프 시스템 초기버전
+	// 0.10.14 - 다음 업데이트시 변경예정
 	void Buff_System();
 	void Buff_Cover(bool OnOff);
 
+	bool IsActiveBuffCover = false;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
+		float CharacterDefenceArmor = 0.f;
+
+	// 마우스 활성화 비활성화
 	UFUNCTION(BlueprintCallable)
 	void BeShowMouseCursor();
 	UFUNCTION(BlueprintCallable)
 	void BeHideMouseCursor();
-
-	bool IsActiveBuffCover = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
-	float CharacterDefenceArmor = 0.f;
-
+	   	 
+	// 애님 몽타주 종료
 	void StopMontage();
 
-	int32 ClassNum;
 
-	//
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameSetting")
-	bool tempCharacterTest = false;
 
 
 protected:
 
-	// 오디오 정리 필요
-	/*
-	UAudioComponent* AudioComp;
-	UAudioComponent* AudioComp_Hit;
-	*/
+	// 오디오 
 	USoundBase* Fire_Sound;
-
 	USoundBase* GetHit_Sound;
 	USoundBase* Death_Sound;
-
-	USoundBase* Selected_Sound;
-
-	// 총기 오디오 
+	USoundBase* Selected_Sound;	
 	
 	ASquadCharacter* tempTargetCharacter = nullptr;
 
 public:
 	
+	// 메쉬
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USkeletalMeshComponent*	Cap;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -184,85 +198,67 @@ public:
 	class USkeletalMeshComponent*	Kneepad_L;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USkeletalMeshComponent*	Holster;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
+		class USkeletalMeshComponent* WeaponSlot;
+	/////////////////////////
 
-
+	// 매쉬, 사운드 동적할당
 	void SetFXSound(const TCHAR* HitSoundContentPath, const TCHAR* DeadSoundConentPath);
 	void SetContentMesh(USkeletalMeshComponent* mesh, const TCHAR* ContentPath);
 	void SetContentMeshMat(USkeletalMeshComponent * mesh, const TCHAR * ContentPath, int32 MatIndex = 0);
-	
 	void SetWeaponMesh();
+	/////////////////////////
+	   	  
+public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
-	class USkeletalMeshComponent* WeaponSlot;
+	// 외곽선 강조 함수 //
+	UFUNCTION()
+		void SetHighLight(bool OnOff);
 
-	public:
+	void SetHighLight_SelfSkill(bool OnOff);
 
-	//UPROPERTY(EditAnywhere)
-	//	float CurrentAmmo;
+	UFUNCTION()
+		void SetTurnOffHighLightGrid();
 
-		void SetReloadReady();
+	bool GetbIsHighLight() { return bIsHighLight; };
+	bool GetbIsSelfHighLight() { return bIsSelfHighLight; };
 
-		void BeReload();
+private:
 
-		void BeReload_BattleOver();
+	bool bIsHighLight = false;
+	void SetbIsHighLight(bool OnOff) { bIsHighLight = OnOff; };
 
-		void Calc_Damage_distribution(ASquadCharacter* TargetEvasionCorrection);
-		TArray<float> Damage_distribution;
-		TArray<float> Damage_distribution_float;
-		float MaxDamage_InDamageDis = 0.f;
+	bool bIsSelfHighLight = false;
+	void SetbIsSelfHighLight(bool OnOff) { bIsSelfHighLight = OnOff; };
 
-		int factorial(int n);
+	/////////////////////////
 
-		void Calc_SkillDamage_distribution(ASquadCharacter* Target, struct FSkillValueList* CompSkillData);
-		TArray<float> SkillDamage_distribution;
-		TArray<float> SkillDamage_distribution_float;
-		float SkillMaxDamage_InDamageDis = 0.f;
-
-	//
-
-		UFUNCTION()
-			void SetHighLight(bool OnOff);
-
-		void SetHighLight_SelfSkill(bool OnOff);
-
-		UFUNCTION()
-			void SetTurnOnHighLightGrid();
-		UFUNCTION()
-			void SetTurnOffHighLightGrid();
-	
-		public:
-
-			class USquadCharacterSkillComponent* CharacterSkillComp;
+public:
+	// 스킬 타겟 및 사용 함수 //
+	class USquadCharacterSkillComponent* CharacterSkillComp;
 
 
-			UFUNCTION()
-				void SetPlayerSkill_ClassNum(int32 ClassNum);
-
-			void SetSkillNumAndTarget(int32 skillNum, AActor * TargetCharacter);
-			int32 skillNum = 0;
-			AActor* SkillTargetCharacter;
-
-			UFUNCTION(BlueprintCallable)
-				void UsePlayerSkill(int32 skillNum, AActor* TargetCharacter);
+	UFUNCTION()
+		void SetPlayerSkill_ClassNum(int32 ClassNum);
 
 
-			void DebugMessage_CharacterState();
-			bool IsCharacterUseAttack = false;
+	UFUNCTION(BlueprintCallable)
+		void UsePlayerSkill(int32 skillNum, AActor* TargetCharacter);
 
-			UFUNCTION(BlueprintCallable)
-				void SetIsCharacterUseAttackTotrue();
+	void SetSkillNumAndTarget(int32 skillNum, AActor * TargetCharacter);
+	int32 skillNum = 0;
+	AActor* SkillTargetCharacter;
 
-			UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-			bool SpreadOutDirection= true; // true면 왼쪽 false 오른쪽
+	/////////////////////////
 
-			private:
-				bool bIsHighLight = false;
-				void SetbIsHighLight(bool OnOff) { bIsHighLight = OnOff; };
+	// AnimBlueprint 제어 함수 및 변수 //
+	UFUNCTION(BlueprintCallable)
+		void SetIsCharacterUseAttackTotrue();
 
-				bool bIsSelfHighLight = false;
-				void SetbIsSelfHighLight(bool OnOff) { bIsSelfHighLight = OnOff; };
-			public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool SpreadOutDirection= true; // true면 왼쪽 false 오른쪽	
 
-				bool GetbIsHighLight() { return bIsHighLight; };
-				bool GetbIsSelfHighLight() { return bIsSelfHighLight; };
+	bool IsCharacterUseAttack = false;
+
+	/////////////////////////
 };

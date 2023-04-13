@@ -27,19 +27,6 @@ APlayerSquadCharacter::APlayerSquadCharacter()
 		GetMesh()->SetAnimInstanceClass(PlayerCharacterAnimBP.Class);
 		UE_LOG(LogClass, Log, TEXT(" Anim Succeeded "));
 	}
-	/*
-	AudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("GUNSOUND"));
-	AudioComp->SetupAttachment(RootComponent);
-	*/
-
-	/*
-	static ConstructorHelpers::FObjectFinder<USoundBase> FireSound(L"SoundWave'/Game/AUDIO/Sound/GunSound/gun_rifle_shot_01.gun_rifle_shot_01'");
-	if (FireSound.Succeeded())
-	{
-		Fire_Sound = FireSound.Object;
-	}
-	*/
-	//
 
 	static ConstructorHelpers::FObjectFinder<USoundBase> GetHitSound(L"SoundWave'/Game/AUDIO/HumanMaleA/Wavs/voice_male_grunt_pain_12.voice_male_grunt_pain_12'");
 	if (GetHitSound.Succeeded())
@@ -51,16 +38,13 @@ APlayerSquadCharacter::APlayerSquadCharacter()
 	if (DeathSound.Succeeded())
 	{
 		Death_Sound = DeathSound.Object;
-	}
-
-	//
+	}	
 
 	static ConstructorHelpers::FObjectFinder<USoundBase> SelectedSound(L"SoundWave'/Game/AUDIO/SFX/UI_Button.UI_Button'");
 	if (SelectedSound.Succeeded())
 	{
 		Selected_Sound = SelectedSound.Object;
-	}
-	
+	}	
 
 	Cap = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Cap"));
 	Cap_equip = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Cap equip"));
@@ -107,25 +91,20 @@ APlayerSquadCharacter::APlayerSquadCharacter()
 	Holster->SetupAttachment(GetMesh());
 
 	// c++ 사용시 Parent Socket을 지정하지 못하는 문제를 해결하기위해서
-	// AttachTo를 사용해서 지정해야한다.
+	// AttachTo를 사용해서 지정해야한다. -> 이전 버전에서 가능
+	// 새로 업데이트된 버전에서는 AttachToComponent를 사용해서 지정해야함
 	WeaponSlot = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSlot"));
 	//WeaponSlot->AttachTo(Hands, TEXT("weaponSocket"), EAttachLocation::KeepRelativeOffset, true);
 	WeaponSlot->AttachToComponent(Hands, FAttachmentTransformRules::KeepRelativeTransform, TEXT("weaponSocket"));
 		
 	LifeBar->SetWorldLocation(FVector(50.f, -50.f, 200.f));
 
-	CharacterSkillComp = CreateDefaultSubobject<USquadCharacterSkillComponent>(TEXT("SKillComp"));
-	
-	
+	CharacterSkillComp = CreateDefaultSubobject<USquadCharacterSkillComponent>(TEXT("SKillComp"));	
 }
 
 void APlayerSquadCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-
-	//Calc_Damage_distribution();
-	//Cast<UStatusBarWidget>(LifeBar->GetUserWidgetObject())->SetProgressBarImage(2);
 }
 
 void APlayerSquadCharacter::Tick(float DeltaTime)
@@ -153,6 +132,8 @@ void APlayerSquadCharacter::Tick(float DeltaTime)
 		Cast<UCharacterAnimInstance>(animInstance)->Call_GetIsSpreadOut();
 	}
 }
+
+///////////////////////// 캐릭터 초기화 //////////////////////////////////////
 
 void APlayerSquadCharacter::InitCharacterStat()
 {
@@ -220,23 +201,18 @@ void APlayerSquadCharacter::SetContentMeshMat(USkeletalMeshComponent* mesh, cons
 	if (ContentPath != nullptr)
 	{		
 		UMaterial* MeshMat = Cast<UMaterial>(StaticLoadObject(UMaterial::StaticClass(), NULL, ContentPath));
-		if (MeshMat)
-		{
+		if (MeshMat) {
 			mesh->SetMaterial(MatIndex ,MeshMat);
 		
 		}
-		else
-		{
+		else {
 		
 		}
 	}
-	else
-	{
+	else {
 		mesh = nullptr;
 	}
 }
-
-
 
 void APlayerSquadCharacter::SetWeaponMesh()  //USkeletalMeshComponent* mesh
 {
@@ -284,17 +260,19 @@ void APlayerSquadCharacter::SetSkeletalMeshComp(USkeletalMesh* Head, USkeletalMe
 
 void APlayerSquadCharacter::SetShotReady()
 {
+	// 남은 탄환 수가 0 보다 클때
 	if (CurrentAmmo > 0) {
 		if (Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->GetIsBattleStart() != false && (StateEnum != EStateEnum::SE_End && StateEnum != EStateEnum::SE_Death)) {
-
+			// 캐릭터 상태 검사
 			if (StateEnum == EStateEnum::SE_Shot || StateEnum == EStateEnum::SE_Skill1 || StateEnum == EStateEnum::SE_Skill2)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
 			else if (StateEnum == EStateEnum::SE_Cover || StateEnum == EStateEnum::SE_Reload)
 				Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(false);
-
+			// 외곽선 활성화
 			SetHighLight(true);
-
+			// 캐릭터 상태 변화
 			StateEnum = EStateEnum::SE_Shot;
+			// 타겟팅 캐릭터 외곽선 활성화
 			Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetSkillTargeting(true);
 		}
 	}
@@ -309,82 +287,65 @@ void APlayerSquadCharacter::SetShotReady()
 
 		StateEnum = EStateEnum::SE_Stay;
 	}
-		Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 0);
-		UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
-		BW->ChangeSelectedButton(BW->GetAttackButton());
-		UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);
-		
-		//DisableInput(Cast<ASquadController>(GetWorld()->GetFirstPlayerController()));
-	
+
+	// 탐색시에도 스킬 설명 활성화
+	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->UpDateWidget_SkillPanel(this, 0);
+	UBattleWidget* BW = Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget());
+	BW->ChangeSelectedButton(BW->GetAttackButton());
+	UGameplayStatics::PlaySoundAtLocation(this, Selected_Sound, GetActorLocation(), 1.0f);	
 }
 
-void APlayerSquadCharacter::Debug_Shot(ASquadCharacter* Target) // 시즌 2에서 함수명 고쳐야함
+void APlayerSquadCharacter::SetShot(ASquadCharacter* Target)
 {
+	// 타겟 초기화
 	tempTargetCharacter = Target;
 	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 	FString WeaponName = CharacterStat->GetCharacterWeaponName();
-
+	// UI 제어
 	Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->Set_BattleWidgetOpacity(0.5f);
 	Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
 	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->SetDisableSkillTargeting(true);
 
+	// 사격 애니메이션 재생
 	if (CharAnimInst != nullptr)
 	{
-		/*
-		if (WeaponName == "Pistol") {
-						
-				CharAnimInst->AimingPistol();
-		;
-		}
-		else 
-		*/
-		IsCharacterUseAttack = true;
-	
+		IsCharacterUseAttack = true;	
 
 		Cast<UBattleWidget>(Cast<ASquadGameMode>(GetWorld()->GetAuthGameMode())->GetCurrentWidget())->Set_BattleWidgetSkillButtonActive(false);
 		CharAnimInst->Aiming();
-	}
-
-	
+	}	
 }
 
 void APlayerSquadCharacter::BeShot()
 {
+	// 사격 애니메이션이 재생되면 데미지 계산
+	// 애님 몽타주 Notify로 함수 호출
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
 	FVector CharLoc = GetActorLocation();
 	FVector TargetLoc = tempTargetCharacter->GetActorLocation();
 	FVector Rot = TargetLoc - CharLoc;
-	//SetActorRotation(Rot.ToOrientationRotator());
-	
+
 	float HitCount = 0.f;
 	float CriticalCount = 0.f;
 	float ActualDamage = 0.f;
-
 
 	if (gameIns->TargetCharacter != nullptr)
 	{
 		UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
 
-		
-		//GameStatic->SpawnEmitterAttached(FireParticle, Weapon, FName("MuzzleFlash"));
-
 		FString WeaponName = CharacterStat->GetCharacterWeaponName();
 
 		if (WeaponName == "Rifle") {
-			//UGameplayStatics::PlaySoundAtLocation(this, Rifle_Shot_Sound, GetActorLocation(), 0.2f);
 			CharAnim->BeShotRifle();
 		}
 		else if (WeaponName == "Pistol") {
-			//UGameplayStatics::PlaySoundAtLocation(this, Pistol_Shot_Sound, GetActorLocation(), 0.2f);
 			CharAnim->BeShotPistol();
 		}
 		else if (WeaponName == "Shotgun") {
-			//UGameplayStatics::PlaySoundAtLocation(this, Shotgun_Shot_Sound, GetActorLocation(), 0.2f);
 			CharAnim->BeShotShotgun();
 		}
 		else if (WeaponName == "Sniper") {
-			//UGameplayStatics::PlaySoundAtLocation(this, Sniper_Shot_Sound, GetActorLocation(), 0.2f);
 			CharAnim->BeShotSniper();
 		}
 
@@ -415,23 +376,20 @@ void APlayerSquadCharacter::BeShot()
 		// 애니메이션 연출을 그렇하던가 - 함수호출을 해가지고 연출을 그렇게하던가
 		// 3 / 3 (제일 편함 애니메이션) 문제 : 애니메이션 모션을 구할수가 없음
 
-		for (int32 i = 0; i < CharacterStat->GetWeaponFireCount(); i++)
-		{
+		for (int32 i = 0; i < CharacterStat->GetWeaponFireCount(); i++) {
 			if (FMath::FRandRange(0.f, 100.f) < CharacterStat->GetCharacterAccuracyCorrectionValue() + CharacterStat->GetWeaponAccuracy() - tempTargetCharacter->Evasion) // 맞췃을때
 			{
 				HitCount++; // 히트 카운트 계산
 			}
 		}
-		for (int32 i = 0; i < HitCount; i++)
-		{
-			if (FMath::FRandRange(0.f, 100.f) < CharacterStat->GetCharacterCriticalCorrectionValue() + CharacterStat->GetWeaponCritical())
-			{
+		for (int32 i = 0; i < HitCount; i++) {
+			if (FMath::FRandRange(0.f, 100.f) < CharacterStat->GetCharacterCriticalCorrectionValue() + CharacterStat->GetWeaponCritical())	{
 				// 치명타 계산
 				CriticalCount++;
 			}
 		}
 
-		ActualDamage = CharacterStat->GetWeaponDamage() * HitCount + 1000.f * CriticalCount; // 마지막 데미지
+		ActualDamage = CharacterStat->GetWeaponDamage() * HitCount + 1000.f * CriticalCount; // 최종 데미지
 
 		if(ActualDamage > 0)
 			UGameplayStatics::ApplyDamage(tempTargetCharacter, ActualDamage, GetWorld()->GetFirstPlayerController(), this, nullptr);
@@ -444,13 +402,8 @@ void APlayerSquadCharacter::BeShot()
 	if (CurrentAmmo >= 0)
 		CurrentAmmo -= 1;
 
-	//SetCharacterEnd();
-
 	if (UnderGrid != nullptr)
 		UnderGrid->SetGridInfo_Material_Black();
-
-	//SetIsCharacterUseAttackTotrue();
-
 }
 
 //////////////////////////// Reload /////////////////////////////////////////
@@ -573,15 +526,6 @@ void APlayerSquadCharacter::BeReload_BattleOver()
 	//gameIns->BCIns->EndTurnSystem();
 }
 
-////////////////////////////// Move //////////////////////////////////////////////
-
-void APlayerSquadCharacter::SetMoveReady()
-{
-	//StateEnum = EStateEnum::SE_Move;
-
-
-}
-
 ////////////////////////////// Cover //////////////////////////////////////////////
 
 void APlayerSquadCharacter::SetCoverReady()
@@ -623,7 +567,7 @@ void APlayerSquadCharacter::SetCover()
 
 ////////////////////////// Stay  ////////////////////////////////////////
 
-void APlayerSquadCharacter::SetStay()
+void APlayerSquadCharacter::SetStayReady()
 {
 	StateEnum = EStateEnum::SE_Stay;
 
@@ -760,6 +704,7 @@ void APlayerSquadCharacter::SetCharacterEnd()
 	
 }
 
+///////////////////////// 피격시 ///////////////////////////////////////////
 float APlayerSquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(Damage - CharacterDefenceArmor, DamageEvent, EventInstigator, DamageCauser);
@@ -846,6 +791,9 @@ void APlayerSquadCharacter::PlayerDeath(UCharacterAnimInstance* CharAnimInst)
 	LifeBar->SetHiddenInGame(true);
 }
 
+////////////////////////////////////////////////////////////////////////////
+
+
 void APlayerSquadCharacter::PlaySelectedSound()
 {
 	// 
@@ -856,11 +804,6 @@ void APlayerSquadCharacter::StopMontage()
 {
 	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 	CharAnimInst->StopMontage();
-}
-
-void APlayerSquadCharacter::InputTest()
-{
-	UE_LOG(LogClass, Log, L"!!!");
 }
 
 void APlayerSquadCharacter::SetUnderGrid(AGrid* Grid)
@@ -940,12 +883,15 @@ void APlayerSquadCharacter::BeHideMouseCursor()
 	//GetWorld()->GetFirstPlayerController()->
 }
 
+//////////// 사격 , 스킬 데미지 계산 함수 ///////////////////
+
 void APlayerSquadCharacter::Calc_Damage_distribution(ASquadCharacter* TargetEvasionCorrection)
 {
 	// nCr =  n! / (r! * (n-r)!)
 	// 0번 성공 = 10! / ( 0! * ( 10 - 0 ) ! ) * (맞을확률)^0 * (빗나갈확률)^10
 	Damage_distribution.Init(0.f, 11);
 	Damage_distribution_float.Init(0.f, 11);
+	MaxDamage_InDamageDis = 0.f;
 
 	for (int i = 0; i <= CharacterStat->GetWeaponFireCount(); i++)
 	{
@@ -983,7 +929,7 @@ void APlayerSquadCharacter::Calc_SkillDamage_distribution(ASquadCharacter* Targe
 
 	SkillDamage_distribution.Init(0.f, 11);
 	SkillDamage_distribution_float.Init(0.f, 11);
-
+	SkillMaxDamage_InDamageDis = 0.f;
 	// 최대 발사 수 , 정확도 , 
 	int32 Skill_ShotCount = CompSkillData->SkillFireCount;
 	int32 Skill_BulletDamage = CompSkillData->SkillDamage;
@@ -1027,8 +973,9 @@ int APlayerSquadCharacter::factorial(int n)
 		return n * factorial(n - 1);
 }
 
-////////////
+//////////////////////////////////////////////////////////////
 
+////////////////////// 외곽선 ///////////////////////////////
 void APlayerSquadCharacter::SetHighLight(bool OnOff)
 {
 	GetMesh()->SetRenderCustomDepth(OnOff);
@@ -1136,11 +1083,6 @@ void APlayerSquadCharacter::SetHighLight_SelfSkill(bool OnOff)
 	SetbIsSelfHighLight(OnOff);
 }
 
-void APlayerSquadCharacter::SetTurnOnHighLightGrid()
-{
-
-}
-
 void APlayerSquadCharacter::SetTurnOffHighLightGrid()
 {
 	if (UnderGrid != nullptr)
@@ -1151,8 +1093,7 @@ void APlayerSquadCharacter::SetTurnOffHighLightGrid()
 
 void APlayerSquadCharacter::SetPlayerSkill_ClassNum(int32 ClassNum)
 {
-	CharacterSkillComp->SetCharacterData(ClassNum, this);
-	CharacterSkillComp->InitCharacterSkill();
+	CharacterSkillComp->InitCharacterSkillComp(ClassNum, this);
 }
 
 void APlayerSquadCharacter::SetSkillNumAndTarget(int32 skillNum, AActor* TargetCharacter)
@@ -1206,15 +1147,9 @@ void APlayerSquadCharacter::UsePlayerSkill(int32 skillNum, AActor* TargetCharact
 	//SetCharacterEnd();// 임시
 }
 
-
-
-
 /////////////////////////////////////
 
-void APlayerSquadCharacter::DebugMessage_CharacterState()
-{
-}
-
+//////////// 애님 블루프린트 호출 함수 ////////////
 void APlayerSquadCharacter::SetIsCharacterUseAttackTotrue()
 {
 	IsCharacterUseAttack = false;

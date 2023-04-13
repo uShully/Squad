@@ -75,8 +75,6 @@ AEnemySquadCharacter::AEnemySquadCharacter()
 	{
 		SniperAnimBP = SNIPER_ANIM.Class;
 	}
-
-
 	
 	//// Init Enemy Character Stat ////
 	LifePoint = 0.f;
@@ -86,16 +84,12 @@ AEnemySquadCharacter::AEnemySquadCharacter()
 	Damage = 0.f;
 	CurrentAmmo = 0.f;
 	FireCount = 0.f;
-	//EnemyCharacter_BrunchName = ;
-	
-
 }
 
 void AEnemySquadCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	Character_Rotator_StartRotator = GetActorRotation();
-	//MaxAmmo = CurrentAmmo;
 }
 
 void AEnemySquadCharacter::Tick(float DeltaTime)
@@ -118,33 +112,25 @@ float AEnemySquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& 
 {
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	if (LifePoint > 0)
-	{
+	if (LifePoint > 0) {
 		if(ActualDamage > 0) {
 			UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
-			if (CharAnimInst != nullptr)
-			{
-				//UGameplayStatics::PlaySoundAtLocation(this, GetHit_Sound, GetActorLocation(), 1.0f);
+			if (CharAnimInst != nullptr) {
 				CharAnimInst->Enemy_Hit();
 			}
 		}
 		else if (ActualDamage <= 0) {
 			UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
-			if (CharAnimInst != nullptr)
-			{
-				//UGameplayStatics::PlaySoundAtLocation(this, GetHit_Sound, GetActorLocation(), 1.0f);
+			if (CharAnimInst != nullptr) {
 				CharAnimInst->Enemy_Hit();
 			}
 		}
 	}
-	else
-	{
+	else {
 		UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
-		if (CharAnimInst != nullptr)
-		{
+		if (CharAnimInst != nullptr) {
 			EnemyDeath(CharAnimInst);
 		}
-
 	}
 
 	return ActualDamage;
@@ -153,29 +139,27 @@ float AEnemySquadCharacter::TakeDamage(float Damage, struct FDamageEvent const& 
 void AEnemySquadCharacter::EnemyDeath(UCharacterAnimInstance* CharAnimInst)
 {
 	if(!IsDeath) {
-		//UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 		USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-		ArrayNumbering = 999;
+		// 배열 숫자 변경
+		ArrayNumbering = 999; 
+		// BattleControoler의 적 종료 배열에서 삭제
 		Cast<ABattleController>(gameIns->BCIns)->RemoveFromEnemyEndBattleArray(this);
+		// 밟고 있던 그리드 visiblity 변경
 		SetGridOff();
+		// 캐릭터 사망처리
 		Characterdeath(); // 충돌 무시, 무브먼트 정지 , 상태 변환
 
+		// 랜덤하게 캐릭터 사망 모션 연출
 		int32 tempRand = FMath::FloorToInt(FMath::RandRange(0.f, 1.9f));
-
 		if (tempRand == 0)
 			CharAnimInst->Enemy_Death1();
 		else if (tempRand == 1)
 			CharAnimInst->Enemy_Death2();
-
-
-	
+		// 캐릭터 HP바 숨기기
 		LifeBar->SetHiddenInGame(true);
-	
-		gameIns->BCIns->AddEnemyDeathCount(); // [BUG] 발생했던 지점
-
+		// 인스턴스의 적 캐릭터 사망 카운트
+		gameIns->BCIns->AddEnemyDeathCount();
 	}
-
-
 }
 
 void AEnemySquadCharacter::SetBelongToBattleTrigger(ABattleTrigger* BattleTrigger)
@@ -189,8 +173,7 @@ ABattleTrigger* AEnemySquadCharacter::GetBelongToBattleTrigger()
 }
 
 void AEnemySquadCharacter::Enemy_ReadytoShot(class APlayerSquadCharacter* shotTarget)
-{
-	
+{	
 	IsCharacterUseAttack = true;
 	UCharacterAnimInstance* CharAnimInst = Cast<UCharacterAnimInstance>(animInstance);
 	if (CurrentAmmo <= 0) {
@@ -206,41 +189,38 @@ void AEnemySquadCharacter::Enemy_ReadytoShot(class APlayerSquadCharacter* shotTa
 
 void AEnemySquadCharacter::Enemy_Shot(AActor* Target)
 {
-	    UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
-		
+	UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);		
 	
-			float FinalDamage = 0.f;
-			float TargetTotalAcc = tempshotTarget->CharacterStat->GetCharacterEvasionCorrectionValue() + tempshotTarget->CharacterStat->GetWeaponAvoidence();
+	float FinalDamage = 0.f;
+	float TargetTotalAcc = tempshotTarget->CharacterStat->GetCharacterEvasionCorrectionValue() + tempshotTarget->CharacterStat->GetWeaponAvoidence();
 
-			for (int i = 0; i < FireCount; i++) {
-				if (FMath::RandRange(0.f, 100.f) < Accuracy - TargetTotalAcc) {
-					FinalDamage += Damage;
-				}
-			}
+	for (int i = 0; i < FireCount; i++) {
+		if (FMath::RandRange(0.f, 100.f) < Accuracy - TargetTotalAcc) {
+			FinalDamage += Damage;
+		}
+	}
 
-			CurrentAmmo -= 1.f;
+	CurrentAmmo -= 1.f;
 
-			if (weaponNum == 0)
-				CharAnim->Enemy_BeShoting();
-			else
-				CharAnim->Enemy_BeShoting();//CharAnim->Enemy_BeShot();			
+	if (weaponNum == 0)
+		CharAnim->Enemy_BeShoting();
+	else
+		CharAnim->Enemy_BeShoting();			
 
-			if (FinalDamage > 0)
-				UGameplayStatics::ApplyDamage(tempshotTarget, FinalDamage, GetWorld()->GetFirstPlayerController(), this, nullptr);
-			else if (FinalDamage == 0){
-				FDamageEvent DamegeEvent;
-				(tempshotTarget)->TakeDamage(0, DamegeEvent, nullptr, this);
-			}
+	if (FinalDamage > 0)
+		UGameplayStatics::ApplyDamage(tempshotTarget, FinalDamage, GetWorld()->GetFirstPlayerController(), this, nullptr);
+	else if (FinalDamage == 0) {
+		FDamageEvent DamegeEvent;
+		(tempshotTarget)->TakeDamage(0, DamegeEvent, nullptr, this);
+	}
 		
-		tempshotTarget = nullptr;
-		
+	tempshotTarget = nullptr;		
 }
 
 void AEnemySquadCharacter::Enemy_TurnEnd()
 {
 	IsCharacterUseAttack = false;
 	tempTargetCharacter = nullptr;
-	//GetStatustBarWidget()->SetBarRenderOpacity(0.5f);
 	Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns->ActiveEnemyAI();
 }
 
@@ -250,11 +230,13 @@ void AEnemySquadCharacter::CharacterSkill_Reload()
 	UCharacterAnimInstance* CharAnim = Cast<UCharacterAnimInstance>(animInstance);
 	CharAnim->Enemy_Reloading();
 
-	ShotTarget = nullptr; // 임시
+	ShotTarget = nullptr;
+
 	// 장전 관련
 	// - 애니메이션 추가 필요
-	// - 애니메이션에 노티파이를 붙여석 관리할것인가 ( 애니메이션 재생 시간 + 턴 종료 시간 )
+	// - 애니메이션에 노티파이를 붙여서 관리할것인가 ( 애니메이션 재생 시간 + 턴 종료 시간 )
 	// - 그냥 애니메이션 재생만 할것인가 ( 턴 종료 시간 )
+	// => 애니메이션에 노티파이를 붙여서 관리하기로 정해짐
 }
 
 void AEnemySquadCharacter::SetUnderGrid(AGrid* Grid)
@@ -269,9 +251,12 @@ AGrid* AEnemySquadCharacter::GetUnderGrid()
 
 void AEnemySquadCharacter::SetWeaponStat(FString WeaponName)
 {
-	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	
+	// 1.병과에 따른 소지하고 있는 총, 총알 연출 변경
+	// 2.총의 스테이터스를 캐릭터 능력치에 추가
 
+	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());	
+
+	// 1. 총,총알, 애니메이션 연출 변경
 	if (WeaponName == "Rifle") {
 		weaponNum = 0;
 		ProjectileBulletClass = AssaultBulletClass;
@@ -308,6 +293,7 @@ void AEnemySquadCharacter::SetWeaponStat(FString WeaponName)
 		animInstance = GetMesh()->GetAnimInstance();
 	}
 
+	// 2. DT에서 총의 스테이터스를 읽어봐 능력치에 합산
 	auto WeaponDT = gameIns->GetWeaponData(weaponNum);
 	
 	LifePoint = 10.f;
@@ -324,17 +310,12 @@ void AEnemySquadCharacter::SetWeaponStat(FString WeaponName)
 
 void AEnemySquadCharacter::SetSkeletalMesh(const TCHAR* ContentPath)
 {
-	
-	
-	if (ContentPath != nullptr)
-	{
+	if (ContentPath != nullptr)	{
 		USkeletalMesh* CharacterMesh = Cast<USkeletalMesh>(StaticLoadObject(USkeletalMesh::StaticClass(), NULL, ContentPath));
-		if (CharacterMesh)
-		{
+		if (CharacterMesh) {
 			GetMesh()->SetSkeletalMesh(CharacterMesh);
 		}
-		else
-		{
+		else {
 
 		}
 	}
@@ -342,17 +323,12 @@ void AEnemySquadCharacter::SetSkeletalMesh(const TCHAR* ContentPath)
 
 void AEnemySquadCharacter::SetWeaponMesh(const TCHAR* ContentPath)
 {
-
-
-	if (ContentPath != nullptr)
-	{
+	if (ContentPath != nullptr)	{
 		USkeletalMesh* CharacterMesh = Cast<USkeletalMesh>(StaticLoadObject(USkeletalMesh::StaticClass(), NULL, ContentPath));
-		if (CharacterMesh)
-		{
+		if (CharacterMesh)	{
 			Weapon->SetSkeletalMesh(CharacterMesh);
 		}
-		else
-		{
+		else {
 
 		}
 	}
@@ -363,29 +339,27 @@ void AEnemySquadCharacter::SetSkeletalMeshPath(int32 BrunchNum)
 	
 	switch (BrunchNum)
 	{
-	case 0:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Recruit.SM_Enemy_Recruit'");
-		break;
-	case 1:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_RecruitLeader.SM_Enemy_RecruitLeader'");
-		break;
-	case 2:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Rifleman.SM_Enemy_Rifleman'");
-		break;
-	case 4:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Police.SM_Enemy_Police'");
-		break;
-	case 6:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Assault.SM_Enemy_Assault'");
-		break;
-	case 8:
-		SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Sniper.SM_Enemy_Sniper'");
-		break;
-	default:
-		break;
+		case 0:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Recruit.SM_Enemy_Recruit'");
+			break;
+		case 1:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_RecruitLeader.SM_Enemy_RecruitLeader'");
+			break;
+		case 2:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Rifleman.SM_Enemy_Rifleman'");
+			break;
+		case 4:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Police.SM_Enemy_Police'");
+			break;
+		case 6:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Assault.SM_Enemy_Assault'");
+			break;
+		case 8:
+			SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Enemy_Sniper.SM_Enemy_Sniper'");
+			break;
+		default:
+			break;
 	}
-
-	//SetSkeletalMesh(L"SkeletalMesh'/Game/Characters/CharacterBP/SM_Modular_soldier_recruit.SM_Modular_soldier_recruit'");
 }
 
 void AEnemySquadCharacter::SetBrunchAnimBP()
@@ -394,8 +368,7 @@ void AEnemySquadCharacter::SetBrunchAnimBP()
 }
 
 void AEnemySquadCharacter::SetHighLight(bool OnOff)
-{
-	
+{	
 	GetMesh()->SetRenderCustomDepth(OnOff);
 	Weapon->SetRenderCustomDepth(OnOff);
 	GetMesh()->SetCustomDepthStencilValue(2);

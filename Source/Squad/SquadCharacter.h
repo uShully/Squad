@@ -111,36 +111,31 @@ UCLASS(config=Game)
 class ASquadCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
-	/*
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* SideViewCameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* CameraBoom;
-	*/
-
+			   
 protected:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void PostInitializeComponents() override;
 
 public:
-	// Animation
-	UAnimInstance* animInstance;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		class UBoxComponent* BoxColiision;
+	// Animation Intance
+	UAnimInstance* animInstance;
+	// 캐릭터가 밟고 있는 그리드 반환
 	class AGrid* GetUnderGrid();
 
 protected:
-	virtual void PostInitializeComponents() override;
-	   	 
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AFloatingTextActor> FloatingTextActorBP;
-
+	// 캐릭터가 밟고 있는 그리드
 	class AGrid* UnderGrid;
 
+	// 사운드
 	USoundBase* Rifle_Shot_Sound;
 	USoundBase* Rifle_Reload_Sound;
 	USoundBase* Pistol_Shot_Sound;
@@ -154,64 +149,49 @@ public:
 
 	ASquadCharacter();
 
+	// 데미지
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void SpawnDamageUI();
+
 	float TakenDamage;
 
-
-
+	// 캐릭터 죽음 관련
 	void Characterdeath();
 	bool IsDeath = false;
 
-	int32 MaxLifePoint;
 
-	/** Called for side to side input */
+	// 좌우 무브
 	void MoveRight(float Val);
 
 
 public:
-	
+	// 캐릭터 HP바
 	UFUNCTION(BlueprintPure, Category = "Status")
-	float GetLifePointPercent() const;
+		float GetLifePointPercent() const;
 
 	UFUNCTION(BlueprintPure, Category = "Status")
 		float GetAmmoPercent() const;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	UWidgetComponent *LifeBar {nullptr};
+		UWidgetComponent *LifeBar {nullptr};
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class UBoxComponent* BoxColiision;
 
+	// 캐릭터 상태
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EStateEnum StateEnum = EStateEnum::SE_Stay;
-
-
-	/*
-	FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
-
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	*/
-
+		EStateEnum StateEnum = EStateEnum::SE_Stay;
+	
+	// 게임 연출
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
-	USkeletalMeshComponent* Weapon;
+		USkeletalMeshComponent* Weapon;
 
 	UPROPERTY()
-	class UGameplayStatics* GameStatic;
-
-	UPROPERTY()
-	class UParticleSystem* FireParticle;
+		class UParticleSystem* FireParticle;
 
 	UPROPERTY()
 		class UParticleSystem* BloodParticle;
-
-	void Test();
-
-	//// 1 20 ////
-
-	class AGrid* pGridOnCharacter;
-
+	
+	// 캐릭터가 밟고 있는 그리드 관련
 	void SetGridOn();
 	void SetGridOff();
 
@@ -220,7 +200,7 @@ public:
 	bool IsGridOn = false;
 
 public:
-	// 캐릭터 능력치 // - 삭제 예정
+	// 캐릭터 능력치 // 
 
 	UPROPERTY(EditAnywhere, Category = "Status")
 		float LifePoint;
@@ -252,6 +232,8 @@ public:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly , Category = "Status")
 		bool IsStun = false;
 
+	// 체력
+	int32 MaxLifePoint;
 	///////////////////////////////////////////
 
 	UPROPERTY(VisibleAnywhere)
@@ -270,6 +252,8 @@ public:
 	UFUNCTION()
 		class UStatusBarWidget* GetStatustBarWidget();
 
+	// 버프 관련 함수
+	// v0.10.14 - 다음 추가 업데이트 사용
 	public:
 
 		void CharacterBuff_Init();
@@ -290,17 +274,23 @@ public:
 		int32 Debuff_Accrancy = 0;
 		int32 Debuff_Evasion = 0;
 
+	// CC 관련 함수
 	private:
-
 		TArray<FCCStatus> CCArray;
 
 	public:
 		void Add_CCArray(FCCStatus CastCC);
 		void Control_CCArray();
-		void Calc_CCArray_Data();
 
 		void Clear_CCArray();
 
+	// 캐릭터 스킬 쿨타임 관련
+	public:
+		int32 Character_Skill1_Cooldown = 0;
+		int32 Character_Skill2_Cooldown = 0;
+
+
+	// 총알 연출 관련
 	public:
 		FRotator Character_Rotator_StartRotator;
 		bool Character_BattleRotator_Start = false;
@@ -308,8 +298,6 @@ public:
 
 		void Change_Character_RotatorToStartBattle();
 
-		int32 Character_Skill1_Cooldown = 0;
-		int32 Character_Skill2_Cooldown = 0;
 
 		UPROPERTY()
 			TSubclassOf<class ABullet> ProjectileBulletClass;

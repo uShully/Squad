@@ -250,7 +250,7 @@ void ASquadController::SetTargetCharacter()
 
 						if (gameIns->SelectedCharacter != nullptr && Cast<ASquadCharacter>(gameIns->SelectedCharacter)->StateEnum == EStateEnum::SE_Shot) // 선택된 캐릭터가 Shot 상태 일때
 						{
-							Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->Debug_Shot(Cast<ASquadCharacter>(HitTarget.Actor));				
+							Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetShot(Cast<ASquadCharacter>(HitTarget.Actor));				
 							auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 							SplayerController->SetSquadControllerInput(false);
 							DisableInput(SplayerController);
@@ -288,7 +288,7 @@ void ASquadController::SetTargetCharacter()
 							{
 								if (Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->StateEnum != EStateEnum::SE_End)
 								{
-									Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetStay();
+									Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetStayReady();
 								}				
 						
 							}

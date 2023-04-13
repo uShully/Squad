@@ -26,11 +26,8 @@ protected:
 public:
 	void SetClassData(int32 ClassNum);
 	void SetWeaponData(int32 WeaponNumber);
-	void SetDamage(float NewDamage);
-	float GetAttack();
-	
 	void SetBranchStat();
-
+	
 	FOnHPIsZeroDelegate OnHPIsZero;
 
 	//// get brunchStat data ////
@@ -44,15 +41,12 @@ public:
 
 	//// get WeaponStat data //// 
 
-
 	float GetWeaponMaxFireCount();
 	float GetWeaponDamage();
 	float GetWeaponFireCount();
 	float GetWeaponAccuracy();
 	float GetWeaponCritical();
-
 	float GetWeaponAvoidence();
-
 
 protected:
 

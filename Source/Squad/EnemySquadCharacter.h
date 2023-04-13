@@ -64,11 +64,6 @@ public:
 
 protected:
 
-	/*
-	UAudioComponent* AudioComp;
-	UAudioComponent* AudioComp_Hit;
-	*/
-
 	USoundBase* Fire_Sound;
 	USoundBase* GetHit_Sound;
 	USoundBase* Death_Sound;
@@ -77,9 +72,6 @@ protected:
 
 	class ABattleTrigger* BelongToBattleTrigger;
 
-	
-
-	//class AGrid* UnderGrid;
 public:
 
 	FTimerHandle WaitHandle;

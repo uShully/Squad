@@ -28,16 +28,19 @@ void USquadCharacterSkillComponent::BeginPlay()
 
 }
 
-void USquadCharacterSkillComponent::InitCharacterSkill()
+void USquadCharacterSkillComponent::InitCharacterSkillData()
 {
+	// DT에서 스킬 데이터 호출 및 초기화
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
 
-	FSkillValueList* skill0 = gameIns->GetSkillValueData(0);
+	FSkillValueList* skill0 = gameIns->GetSkillValueData(0); // 사격
 	FSkillValueList* skill1;
 	FSkillValueList* skill2;
-	FSkillValueList* skill3 = gameIns->GetSkillValueData(13);
-	FSkillValueList* skill4 = gameIns->GetSkillValueData(14);
+	FSkillValueList* skill3 = gameIns->GetSkillValueData(13); // 엄폐
+	FSkillValueList* skill4 = gameIns->GetSkillValueData(14); // 대기
 
+	// 각 병과의 스킬 데이터 호출
+	// 0.10.14 - 다음 업데이트(병과 추가)시 변경 지점
 	if (pOwner->ClassNum == 0) {
 		skill1 = gameIns->GetSkillValueData(1);
 		skill2 = gameIns->GetSkillValueData(2);
@@ -57,20 +60,18 @@ void USquadCharacterSkillComponent::InitCharacterSkill()
 		skill2 = gameIns->GetSkillValueData(12);		
 	}
 
-
+	// 스킬 데이터 배열에 저장
 	SkillArray.Add(skill0);
 	SkillArray.Add(skill1);
 	SkillArray.Add(skill2);
 	SkillArray.Add(skill3);
-	SkillArray.Add(skill4);
-	
-	
+	SkillArray.Add(skill4);	
 }
+
 FSkillValueList* USquadCharacterSkillComponent::Get_Skill0Data()
 {
 	return SkillArray[0];
 }
-
 
 FSkillValueList* USquadCharacterSkillComponent::Get_Skill1Data()
 {
@@ -98,43 +99,11 @@ void USquadCharacterSkillComponent::UseCharacterSkill(int32 skillNum, AActor* Ta
 
 }
 
-void USquadCharacterSkillComponent::SetCharacterData(int32 classNum, AActor* Owner)
+void USquadCharacterSkillComponent::InitCharacterSkillComp(int32 classNum, AActor* Owner)
 {
 	this->classNum = classNum;
 	pOwner = Cast<APlayerSquadCharacter>(Owner);
-
-	if (pOwner->ClassNum == 0) {
-		FPlayerSkillData RiflemanSkill1(1, 5, 1, -25);
-		FPlayerSkillData RiflemanSkill2(1, 5, 1, 25);
-
-		SkillDataMap.Add(1, RiflemanSkill1);
-		SkillDataMap.Add(2, RiflemanSkill2);
-	}
-	else if (pOwner->ClassNum == 3) {
-		FPlayerSkillData PoliceSkill1(1, 5, 1, -50);
-		FPlayerSkillData PoliceSkill2(1, 5, 1, -25);
-
-		SkillDataMap.Add(7, PoliceSkill1); // 3
-		SkillDataMap.Add(8, PoliceSkill2);
-	}
-	else if (pOwner->ClassNum == 5) {
-
-		FPlayerSkillData AssaultSkill1(1, 10, 1, -50);
-		FPlayerSkillData AssaultSkill2(1, 10, 1, 50);
-
-
-		SkillDataMap.Add(11, AssaultSkill1); // 5
-		SkillDataMap.Add(12, AssaultSkill2);
-	}
-	else if (pOwner->ClassNum == 8) {
-
-		FPlayerSkillData ScoutSkill1(1, 1, 10, -20);
-		FPlayerSkillData ScoutSkill2(1, 1, 5, 100);
-
-		SkillDataMap.Add(17, ScoutSkill1); // 8
-		SkillDataMap.Add(18, ScoutSkill2);
-	}
-
+	InitCharacterSkillData();
 }
 
 void USquadCharacterSkillComponent::Calc_SkillData(AActor* Target, int32 SkillNumber)
