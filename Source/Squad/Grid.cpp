@@ -171,13 +171,13 @@ void AGrid::InitGrid()
 
 	if (YPos == 0)
 	{
-		parentEventBox->parentBattleTrigger->Coordinate.Add(InitCoor);
-		parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);
+		parentGridManager->parentBattleTrigger->Coordinate.Add(InitCoor);
+		parentGridManager->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);
 	}
 	else
 	{
-		parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);		
+		parentGridManager->parentBattleTrigger->Coordinate[XPos].MultiArray.Add(InitCoor);		
 	}
-	parentEventBox->parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid = this;
+	parentGridManager->parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid = this;
 
 }

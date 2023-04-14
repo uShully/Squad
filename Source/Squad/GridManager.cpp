@@ -76,7 +76,7 @@ void AGridManager::InitGrid()
 						
 			AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(GridToSpawn, Loc, this->GetActorRotation(), SpawnParams);
 			SpawnGrids.Add(SpawnedActorRef);
-			Cast<AGrid>(SpawnedActorRef)->parentEventBox = this;
+			Cast<AGrid>(SpawnedActorRef)->parentGridManager = this;
 			
 			// 그리드 정보 초기화
 			AGrid* SpawnGrid = Cast<AGrid>(SpawnedActorRef);
@@ -161,7 +161,7 @@ void AGridManager::InitGrid_Boss()
 
 			AActor* SpawnedActorRef = GetWorld()->SpawnActor<AActor>(GridToSpawn, Loc, this->GetActorRotation(), SpawnParams);
 			SpawnGrids.Add(SpawnedActorRef);
-			Cast<AGrid>(SpawnedActorRef)->parentEventBox = this;
+			Cast<AGrid>(SpawnedActorRef)->parentGridManager = this;
 
 			// 그리드 정보 초기화
 			AGrid* SpawnGrid = Cast<AGrid>(SpawnedActorRef);
@@ -230,32 +230,29 @@ void AGridManager::Spawned_Enemy()
 	TArray<AActor*> tempArray;
 
 	// BattleTrigger 좌표 배열에서 적군 영역에 해당하는 좌표중 장애물이 설치된 좌표를 임시배열에 저장
-	for (int32 XPos =10; XPos < parentBattleTrigger->Coordinate.Num(); XPos++)
-	{
-		for (int32 YPos = 0; YPos < parentBattleTrigger->Coordinate[XPos].MultiArray.Num(); YPos++)
-		{
+	for (int32 XPos =10; XPos < parentBattleTrigger->Coordinate.Num(); XPos++)	{
+		for (int32 YPos = 0; YPos < parentBattleTrigger->Coordinate[XPos].MultiArray.Num(); YPos++)	{
 			AActor* tempActor = parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid;
 
-			if (Cast<AGrid>(tempActor)->GridInfo.GOTO == EGridOntheObject::Obstacle)
-			{
+			if (Cast<AGrid>(tempActor)->GridInfo.GOTO == EGridOntheObject::Obstacle) {
 				tempArray.Add(tempActor);
 			}
 		}
 	}
 
 	// 장애물이 설치된 좌표 뒤쪽(x+1)에 적 캐릭터를 스폰, 적 캐릭터 정보 초기화
-	for (int32 i = 0; i < tempArray.Num(); i++)
-	{
+	for (int32 i = 0; i < tempArray.Num(); i++) {
 		auto pXPos = Cast<AGrid>(tempArray[i])->GridInfo.XPos;
 		auto pYPos = Cast<AGrid>(tempArray[i])->GridInfo.YPos;
 
-		if (pXPos < 14)
-		{
-			if (Cast<AGrid>(parentBattleTrigger->Coordinate[pXPos + 1].MultiArray[pYPos].pGrid)->GridInfo.GOTO != EGridOntheObject::Obstacle)
-			{
+		if (pXPos < 14) {
+			if (Cast<AGrid>(parentBattleTrigger->Coordinate[pXPos + 1].MultiArray[pYPos].pGrid)->GridInfo.GOTO != EGridOntheObject::Obstacle) {
 				auto temp = parentBattleTrigger->Coordinate[pXPos + 1].MultiArray[pYPos].pGrid;
 				// 적캐릭터를 스폰하고 적 캐릭터 배열에 주소값 추가
-				AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn, temp->GetActorLocation(), this->GetActorRotation(), SpawnParams);
+				AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn,
+																			temp->GetActorLocation(),
+																			this->GetActorRotation(),
+																			SpawnParams);
 				parentBattleTrigger->EnemyList.Add(SpawndCharacterRef);
 				Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetBelongToBattleTrigger(parentBattleTrigger);
 				Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetUnderGrid(Cast<AGrid>(temp));
@@ -272,18 +269,20 @@ void AGridManager::Spawned_Enemy()
 	}
 	
 	// 장애물이 충분치 않을때 적 캐릭터가 무작위 위치에 스폰
-	if (numberOfEnemyCharacter != MaxnumberOfEnemyCharacter)
-	{
+	if (numberOfEnemyCharacter != MaxnumberOfEnemyCharacter) {
 		do {
-			for (int32 XPos = 10; XPos < parentBattleTrigger->Coordinate.Num(); XPos++)
-			{
-				for (int32 YPos = 0; YPos < parentBattleTrigger->Coordinate[XPos].MultiArray.Num(); YPos++)
-				{
+			for (int32 XPos = 10; XPos < parentBattleTrigger->Coordinate.Num(); XPos++)	{
+				for (int32 YPos = 0; YPos < parentBattleTrigger->Coordinate[XPos].MultiArray.Num(); YPos++) {
 					AGrid* CastGrid = Cast<AGrid>(parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid);
 					
-					if (CastGrid->GridInfo.GOTO == EGridOntheObject::Normal && numberOfEnemyCharacter <= MaxnumberOfEnemyCharacter - 1 && FMath::RandRange(0, 100) < 10)
-					{
-						AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn, parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid->GetActorLocation(), this->GetActorRotation(), SpawnParams);
+					if (CastGrid->GridInfo.GOTO == EGridOntheObject::Normal 
+						&& numberOfEnemyCharacter <= MaxnumberOfEnemyCharacter - 1 
+						&& FMath::RandRange(0, 100) < 10) {
+
+						AActor* SpawndCharacterRef = GetWorld()->SpawnActor<AActor>(EnemyCharacterToSpawn,
+						 parentBattleTrigger->Coordinate[XPos].MultiArray[YPos].pGrid->GetActorLocation(),
+																				this->GetActorRotation(),
+																							SpawnParams);
 						// 적캐릭터를 스폰하고 적 캐릭터 배열에 주소값 추가
 						parentBattleTrigger->EnemyList.Add(SpawndCharacterRef);
 						Cast<AEnemySquadCharacter>(SpawndCharacterRef)->SetBelongToBattleTrigger(parentBattleTrigger);
@@ -688,11 +687,15 @@ TSubclassOf<AActor> AGridManager::GetRandObstacleInArray()
 
 void AGridManager::SetEnemyCharacterStatData(AEnemySquadCharacter* EnemyCharacter , int32 BrunchNum)
 {
+	// GameInsatnce에 저장된 적군 병과별 능력치 데이터 테이블을 참조하여 병과 번호에 맞는 데이터를 불러온다.
 	auto gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
-	auto BN = FText::FromStringTable("/Game/DATATABLE/EnemyBrunchNameData.EnemyBrunchNameData", FString::Printf(TEXT("%d"), BrunchNum));
+	auto DT_BrunchNumber = FText::FromStringTable("/Game/DATATABLE/EnemyBrunchNameData.EnemyBrunchNameData", 
+																				FString::Printf(TEXT("%d"), 
+																								BrunchNum));
 	auto DT = gameIns->GetEnemyBrunchData(BrunchNum);
 
-	EnemyCharacter->EnemyCharacter_BrunchName = BN;
+	// 병과 능력치 데이터를 적군 캐릭터에 능력치에 할당한다.
+	EnemyCharacter->EnemyCharacter_BrunchName = DT_BrunchNumber;
 	EnemyCharacter->Evasion += DT->EvasionCorrectionValue;
 	EnemyCharacter->Critical += DT->CriticalCorrectionValue;
 	EnemyCharacter->Accuracy += DT->AccuracyCorrectionValue;
@@ -712,7 +715,11 @@ int32 AGridManager::SetEnemyStatRand()
 	// 게임 난이도에 따라 생성되는 적 병과 조절
 	int32 TotalProb = 0;
 	TArray<int32> BrunchNum = { 0  , 2 , 4 , 6 , 8 };
-	TArray<float> Prob = { 40.f + (-4.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue), 15.f + (1.f*gameDifficultyValue) };
+	TArray<float> Prob = { 40.f + (-4.f*gameDifficultyValue),
+							15.f + (1.f*gameDifficultyValue), 
+							15.f + (1.f*gameDifficultyValue), 
+							15.f + (1.f*gameDifficultyValue), 
+							15.f + (1.f*gameDifficultyValue) };
 	for (int32 i = 0; i < 5; i++) { 
 		// 0훈련병 40%, 1소총병 15%, 2경찰병 15%, 3돌격병 15%, 4저격병 15%
 		// 병과번호와, 확률을 Map형식의 brunchProb에 저장

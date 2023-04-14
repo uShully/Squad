@@ -37,7 +37,7 @@ void UVictoryWidget::OnClickResultButton()
 	Cast<USquadGameInstance>(SgameIns)->SCMIns->SetUnitMovement_Delay(3.8);
 
 	auto BCins = Cast<ABattleController>(Cast<USquadGameInstance>(GetWorld()->GetGameInstance())->BCIns);
-	BCins->ResultBattle_PostInit();
+	BCins->ResultBattle_bindwidget();
 	auto SplayerController = Cast<ASquadController>(GetWorld()->GetFirstPlayerController());
 	   
 	//SplayerController->SetSquadControllerInput(true);

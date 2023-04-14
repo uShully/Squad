@@ -99,7 +99,7 @@ public:
 
 	GridInfomation GridInfo;
 
-	class AGridManager* parentEventBox;
+	class AGridManager* parentGridManager;
 public:
  
 	// GridManger 초기화용 함수

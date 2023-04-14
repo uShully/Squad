@@ -252,7 +252,7 @@ void USquadCharacterSkillComponent::Skill_Specialability(int32 skillNum, AActor*
 TArray<AActor*> USquadCharacterSkillComponent::RangeAttackSkill_AdjacentTarget(AActor* targetCharacter)
 {
 	ASquadCharacter* target = Cast<ASquadCharacter>(targetCharacter);
-	AGridManager* parentEB = target->GetUnderGrid()->parentEventBox;
+	AGridManager* parentEB = target->GetUnderGrid()->parentGridManager;
 	TArray<AActor*> tempRangeTargetArray;
 	TArray<AGrid*> tempGridArray;
 

@@ -302,8 +302,7 @@ void ASquadController::SetTargetCharacter()
 
 
 							if (pRayHitSelectedCharacter != nullptr && pRayHitSelectedCharacter != Cast<ASquadCharacter>(HitTarget.Actor)) { // 레이캐스트 선택된 캐릭터가 존재하며, 타겟캐릭터와 다를시
-								//pRayHitSelectedCharacter->SetGridOff();
-								//pRayHitSelectedCharacter->GetStatustBarWidget()->SetBarRenderOpacity(0.5f);
+
 								if (pRayHitSelectedCharacter == Cast<APlayerSquadCharacter>(pRayHitSelectedCharacter))
 								{
 									Cast<APlayerSquadCharacter>(pRayHitSelectedCharacter)->SetHighLight(false);
@@ -312,7 +311,7 @@ void ASquadController::SetTargetCharacter()
 								pRayHitSelectedCharacter = nullptr;
 
 								Cast<ASquadCharacter>(HitTarget.Actor)->SetGridOn();
-								//Cast<ASquadCharacter>(HitTarget.Actor)->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
+
 								if ((HitTarget.Actor) == Cast<APlayerSquadCharacter>(HitTarget.Actor))
 								{
 									Cast<APlayerSquadCharacter>(HitTarget.Actor)->SetHighLight(true);
@@ -338,39 +337,11 @@ void ASquadController::SetTargetCharacter()
 
 								pRayHitSelectedCharacter = Cast<ASquadCharacter>(HitTarget.Actor);
 								Cast<APlayerSquadCharacter>(HitTarget.Actor)->PlaySelectedSound();
-								/*
-								SquadGameMode->ClearCharacterInfoWidgetText();
-								Cast<UBattleWidget>(SquadGameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
-								*/
 							}
 						}
 
 					}
 				}
-			}
-			else // 캐릭터가 아닌 다른 오브젝트를 선택했을시
-			{
-				/* 기획 변경 삭제 예정
-				auto gameIns = gameIns;
-
-			
-				if (Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter) != nullptr) // 인스턴스에 SelectedCharacter가 없다면
-				{
-				
-
-
-				}
-				else if (gameIns->BCIns != nullptr && gameIns->BCIns->IsBattleStart == true)
-				{
-					if (gameIns->SelectedCharacter != nullptr)
-					{
-						if (Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->StateEnum != EStateEnum::SE_End)
-						{
-							Cast<APlayerSquadCharacter>(gameIns->SelectedCharacter)->SetStay();
-						}
-						gameIns->BCIns->ClearSelectedCharacter();					}
-				}
-				*/
 			}
 		}
 	}

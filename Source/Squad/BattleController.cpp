@@ -65,7 +65,7 @@ void ABattleController::Tick(float DeltaTime)
 void ABattleController::InitBattleSetting(TArray<AActor*> EnemyList, AActor* triggerBox)
 {
 	// triger box 초기화
-	if (pTriggerBox == nullptr)  pTriggerBox = Cast<ABattleTrigger>(triggerBox);
+	if (pBattleTrigger == nullptr)  pBattleTrigger = Cast<ABattleTrigger>(triggerBox);
 
 	ClearArray();
 
@@ -108,6 +108,8 @@ void ABattleController::GetEnemyCharacters(TArray<AActor*> EnemyList)
 		Cast<AEnemySquadCharacter>(EnemyCharacters[i])->ArrayNumbering = i;
 		Cast<AEnemySquadCharacter>(EnemyCharacters[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
 	}
+	// 적군 전투 배열 초기화
+	EnemyStartBattleArray = (EnemyCharacters);
 }
 
 void ABattleController::SortCharacters()
@@ -168,20 +170,16 @@ void ABattleController::StartTurnSystem_init()
 	// 캐릭터 산개
 	gameIns->BTIns->BattleTrigger_PlayerSpreadOut();
 	
+	// BGM 재생
+	BGMComp->SetSound(BattleSound);
+	BGMComp->FadeIn(3.f);
+
 	// 람다식 - 1.5초 후 턴 시작 시스템 호출
 	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 		{
 			StartTurnSystem();
 
 		}), 1.5f, false);
-
-	
-	// 적군 전투 배열 초기화
-	EnemyStartBattleArray = (EnemyCharacters);
-	
-	// BGM 재생
-	BGMComp->SetSound(BattleSound);
-	BGMComp->FadeIn(3.f);	
 }
 
 void ABattleController::ControlCharacterCameraMovement(bool PlayerMovementSwitch)
@@ -258,7 +256,8 @@ void ABattleController::StartTurnSystem()
 
 void ABattleController::SetSelectedCharacter(ASquadCharacter* SelectedChararcter)
 {
-	
+	// SelectedCharacter가 nullptr일떄는 전투 초기화때
+	// 전투 중에는 nullptr가 될 수 없으므로 전투UI의 키 이미지를 병과에 맞게 변환시킨다.
 	if (SelectedChararcter == nullptr) {
 		SystemState.SelectedCharacter = nullptr;
 		gameIns->SelectedCharacter = SystemState.SelectedCharacter;
@@ -266,9 +265,8 @@ void ABattleController::SetSelectedCharacter(ASquadCharacter* SelectedChararcter
 	else {
 		SystemState.SelectedCharacter = SelectedChararcter;
 		gameIns->SelectedCharacter = SystemState.SelectedCharacter;
-			
-		APlayerSquadCharacter* pSelectedCharacter = Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter);
-		gameMode->ChangeSkillButtonWidgetImage(pSelectedCharacter);
+		
+		gameMode->ChangeSkillButtonWidgetImage(Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter));
 	}	
 }
 
@@ -294,6 +292,8 @@ void ABattleController::EndTurnSystem()
 	// 전투 종료시 상황 검사 함수 호출
 	BeCheck();
 
+	// 플레이어 턴 종료 함수
+	// 적 턴 종료 함수는 EndTurnSystem_Enemy()
 	if (!WhosTurn && IsBattleStart == true)
 	{
 		if (Cast<ASquadCharacter>(SystemState.SelectedCharacter)->IsGridOn) {	
@@ -312,99 +312,105 @@ void ABattleController::EndTurnSystem()
 			gameMode->UpDateWidgetText(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 			gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
 		}
-		// 적이 모두 죽었는지 안죽었는지 판별
-		
-			if (PlayerEndBattleArray.Num() == FriendlyCharacters.Num() - PlayerDeathCount) 
-			{
-				for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
-				{
-					if(Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum != EStateEnum::SE_Death)
-					Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum = EStateEnum::SE_End;			
-					Update_PlayerCharacterCooldown(Cast<APlayerSquadCharacter>(FriendlyCharacters[i])); // 살아있는 캐릭터 쿨다운 계산
+	
+		// 모든 캐릭터의 턴이 종료 됬을 시
+		if (PlayerEndBattleArray.Num() == FriendlyCharacters.Num() - PlayerDeathCount) 
+		{
+			for (int32 i = 0; i < FriendlyCharacters.Num(); i++){
+				// 죽지 않은 아군 캐릭터의 턴 상태를 턴 종료 상태로 변경시킨다.
+				if(Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum != EStateEnum::SE_Death)
+				Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum = EStateEnum::SE_End;		
+
+				// 살아있는 캐릭터 쿨다운 계산
+				Update_PlayerCharacterCooldown(Cast<APlayerSquadCharacter>(FriendlyCharacters[i])); 
 					
-					Cast<ASquadCharacter>(FriendlyCharacters[i])->Control_CCArray();		// 스킬 효과 가감 함수 추가 예정 12/22
-					Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->SetHighLight(false);
-				}
-
-				for (int32 i = 0; i < EnemyCharacters.Num(); i++)
-				{
-					if (Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum != EStateEnum::SE_Death)
-					Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_Stay;
-				}
-
-				WhosTurn = true;
-				gameMode->ChangeWhosTurnName(WhosTurn);
-				SplayerController->SetSquadControllerInput(false);
-				
-				if (EnemyEndBattleArray.Num() == EnemyCharacters.Num() - EnemyDeathCount)
-				{
-					EnemyStartBattleArray.Append(EnemyEndBattleArray); // 행동 끝낸 적 캐릭터들을 다시 행동력을 채우고
-					for (int32 i = 0; i < EnemyStartBattleArray.Num(); i++) // 행동력을 채운 적 캐릭터 장판을 다시 초록색
+				// 스킬 효과 가감 함수 추가 예정 12/22
+				Cast<ASquadCharacter>(FriendlyCharacters[i])->Control_CCArray();		
+				Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->SetHighLight(false);
+			}
+			// 살아 있는 적 캐릭터들의 턴 상태를 턴 활성화 상태로 변경시킨다.
+			for (int32 i = 0; i < EnemyCharacters.Num(); i++) {
+				if (Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum != EStateEnum::SE_Death)
+				Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_Stay;
+			}
+			// 디버그용 변수
+			WhosTurn = true;
+			gameMode->ChangeWhosTurnName(WhosTurn);
+			// 플레이어 조작을 정지시킨다.
+			SplayerController->SetSquadControllerInput(false);
+			
+			// 살아있는 적 캐릭터 수를 검사
+			if (EnemyEndBattleArray.Num() == EnemyCharacters.Num() - EnemyDeathCount) {	
+				// 살아 있는 적 캐릭터를 턴 시작 배열에 추가
+				// 턴 종료 배열는 초기화 시킨다.
+				EnemyStartBattleArray.Append(EnemyEndBattleArray); 
+				for (int32 i = 0; i < EnemyStartBattleArray.Num(); i++) {
+					if (Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetUnderGrid() != nullptr)
 					{
-						if (Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetUnderGrid() != nullptr)
-						{
-							AGrid* tempGrid = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetUnderGrid();
-							Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-							tempGrid->SetGridInfo_Material_Green();
-						}
+						AGrid* tempGrid = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetUnderGrid();
+						Cast<AEnemySquadCharacter>(EnemyStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
+						tempGrid->SetGridInfo_Material_Green();
 					}
-					EnemyEndBattleArray.Empty();                       // EndArray를 비운다
 				}
+				EnemyEndBattleArray.Empty();                       // EndArray를 비운다
+			}
 
-
-				if (IsBattleStart) // 마지막 적을 잡았을때 생길 수 있는 상황을 방지
-				{ 
-					Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
-					EndTurnSystem_Enemy();						
-				}			
-			}						
+			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
+			EndTurnSystem_Enemy();						
+					
+		}						
 	}
 }
 
 void ABattleController::EndTurnSystem_Enemy()
 {
+	// 플레이어 조작 정지
 	SplayerController->SetSquadControllerInput(false);
 	DisableInput(SplayerController);	
 
-	for (int32 i = 0; i < EnemyCharacters.Num(); i++)
-	{
-		Cast<ASquadCharacter>(EnemyCharacters[i])->Control_CCArray();			// 스킬 효과 가감 함수 추가 예정 12/22
+	// 적 캐릭터에 걸려있는 스킬 효과들 계산
+	for (int32 i = 0; i < EnemyCharacters.Num(); i++){
+		Cast<ASquadCharacter>(EnemyCharacters[i])->Control_CCArray();			
 	}
+	// 스킬 아이콘 밑 숫자 투명도 변경
+	gameMode->Set_BattleWidgetOpacity(0.5f); 
 
-	gameMode->Set_BattleWidgetOpacity(0.5f); // 위젯 투명도
-
-	if (WhosTurn) 
-	{
+	// 적 턴인지 검사 후 AI를 활성화
+	if (WhosTurn) {
 		GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
 			{
 				ActiveEnemyAI();
 
 			}), WaitTime, false);
-		
-
 	}
 }
 
 void ABattleController::BeCheck()
 {
-	if (EnemyDeathCount == EnemyCharacters.Num()) // 적의 수와 적의 죽은수가 같으면
+	if (EnemyDeathCount == EnemyCharacters.Num()) // 적 캐릭터가 모두 죽었을 때
 	{
 		if (gameIns->BTIns->BTState == EBattleTriggerState::Boss) // 보스 스테이지 일때
 		{
+			// BGM은 정지시키고
+			// 게임 승리 UI를 화면에 띄운다.
 			BGMComp->Stop();
-			gameMode->ViewGameVictoryWidget();
+			gameMode->ViewGameVictoryWidget(); 
 		}
-		else { 
+		else {
+			// 전투 종료 함수를 호출 시킨다.
+			// 전투 UI의 텍스트를 초기화 시킨다.
+			// 탐색때 선택된 캐릭터를 현재 선택된 캐릭터로 저장시킨다.
 			ResultBattle_BattleEnd();
 
 			gameMode->ChangeSubWidget(gameMode->GetVictoryWidgetClass());
 			gameMode->ClearCharacterInfoWidgetText_Right();
-			Cast<ASquadController>(GetWorld()->GetFirstPlayerController())->Target_Explorer = Cast<APlayerSquadCharacter>(GetSelectedCharacter());			
+			SplayerController->Target_Explorer = Cast<APlayerSquadCharacter>(GetSelectedCharacter());			
 		}				
 	}
-	else if(PlayerDeathCount == FriendlyCharacters.Num()) // 플레이어 전멸
+	else if(PlayerDeathCount == FriendlyCharacters.Num()) // 플레이어 전멸할때
 	{
-		// UI
+		// 전투 종료 함수 호출
+		// BGM 중지, 게임 패배 UI를 띄운다
 		ResultBattle_BattleEnd();
 		BGMComp->Stop();
 		gameMode->ChangeMenuWidget(gameMode->GetDefeatWidgetClass());
@@ -422,107 +428,111 @@ void ABattleController::ActiveEnemyAI()
 	//	EnemyStartBattleArray = (EnemyEndBattleArray); // 행동 끝낸 적 캐릭터들을 다시 행동력을 채우고
 	//	EnemyEndBattleArray.Empty();                       // EndArray를 비운다
 	//}
-	int32 stunCharactersNum = 0;
 
+	// 스턴 걸린 캐릭터
+	int32 stunCharactersNum = 0;
+	// 스턴 걸린 캐릭터 검사
 	for (int32 num = 0; num < EnemyStartBattleArray.Num(); num++) {
 		if (Cast<AEnemySquadCharacter>(EnemyStartBattleArray[num])->IsStun) {
 			stunCharactersNum++;
 		}
 	}
-
-	if (PlayerDeathCount == FriendlyCharacters.Num())
-	{
+	// 모든 플레이어 캐릭터가 사망한다면 설정되어 있는 타이머(AI)를 정지시키고 전투 상황을 검사한다.
+	if (PlayerDeathCount == FriendlyCharacters.Num()) {
 		GetWorld()->GetTimerManager().ClearTimer(WaitHandle);
 		BeCheck();		
 	}
-	else if(EnemyEndBattleArray.Num() != EnemyCharacters.Num() - (EnemyDeathCount)) // 그렇지 않다면 전투리스트 인덱스 0번째의 적 캐릭터를 팝한다.
-	{
+	else if(EnemyEndBattleArray.Num() != EnemyCharacters.Num() - (EnemyDeathCount)) {
+		// 플레이어 캐릭터가 남아있을시
+		// 전투 시작 리스트 인덱스 0번째의 적 캐릭터를 팝한다.
 		AEnemySquadCharacter* Enemy = Cast<AEnemySquadCharacter>(EnemyStartBattleArray[0]);
 		EnemyStartBattleArray.RemoveSingle(Enemy);
 		ASquadAIController* AIcontroller = Cast<ASquadAIController>(Enemy->GetController());		
-		
 	
+		// 플레이어 캐릭터의 정보를 AIController에 전해준다.
 		if(PlayerStartBattleArray.Num() == 0)
 			AIcontroller->EnemyChararacter_SetFrindlyCharacterList(PlayerEndBattleArray);
-		else
+		else // 적군이 선공일 시 // 만약 기획이 정확히 정립되면 후공인 진영은 EndBattleArray에 저장
 			AIcontroller->EnemyChararacter_SetFrindlyCharacterList(PlayerStartBattleArray);
-
-		EnemyEndBattleArray.Push(Enemy);
-
-		AIcontroller->EnemyCharacter_ActiveAI();
-	
-
-		if(Enemy->GetUnderGrid() != nullptr)
-		Enemy->GetUnderGrid()->SetGridInfo_Material_Black(); 
 		
-
 		// 전투를 실행시킨다
 		// 전투가 끝나면 전투종료리스트에 푸쉬한다.
-
+		AIcontroller->EnemyCharacter_ActiveAI();
+		EnemyEndBattleArray.Push(Enemy);
+		// 그리드를 검정색으로 변경시킨다.
+		if(Enemy->GetUnderGrid() != nullptr)
+		Enemy->GetUnderGrid()->SetGridInfo_Material_Black(); 				
 	}
-	else if(EnemyEndBattleArray.Num() == EnemyCharacters.Num() - (EnemyDeathCount))
-	{
-		for (int32 i = 0; i < EnemyCharacters.Num(); i++)
-		{
-			Cast<ASquadCharacter>(EnemyCharacters[i])->Control_CCArray();			// 스킬 효과 가감 함수 추가 예정 12/22
+	else if(EnemyEndBattleArray.Num() == EnemyCharacters.Num() - (EnemyDeathCount))	{
+		// 모든 적 캐릭터의 턴이 끝났을 시
+		// 적 캐릭터에 적용된 스킬효과를 가감시킨다.
+		for (int32 i = 0; i < EnemyCharacters.Num(); i++) {
+			Cast<ASquadCharacter>(EnemyCharacters[i])->Control_CCArray();			
 		}
-
-		ResetPlayerEndBattleArray();
-		for (int32 i = 0; i < PlayerStartBattleArray.Num(); i++)
-		{
-			AGrid* tempGrid = Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetUnderGrid();
-			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
-			tempGrid->SetGridInfo_Material_Green();
-		}
-
-		for (int32 i = 0; i < EnemyCharacters.Num(); i++)
-		{
-			if(Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum != EStateEnum::SE_Death)
-			Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_End;
-		}
-
-		for (int32 i = 0; i < PlayerStartBattleArray.Num(); i++)
-		{
-			Cast<ASquadCharacter>(PlayerStartBattleArray[i])->StateEnum = EStateEnum::SE_Stay;
-			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->Buff_System();
-			Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->StopMontage();
-		}
-
-		SplayerController->SetSquadControllerInput(true);
-		EnableInput(SplayerController);
-
-		WhosTurn = false;
-		gameMode->ChangeWhosTurnName(WhosTurn);
-		gameMode->Set_BattleWidgetOpacity(1.f);
-		SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-
-		
-		gameMode->UpDateWidgetText(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-		gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
-		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
-		{
-			if(Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum != EStateEnum::SE_Death)
-			Cast<ASquadCharacter>(FriendlyCharacters[i])->Control_CCArray();		// 스킬 효과 가감 함수 추가 예정 12/22
-		}
-		if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter) {
-			Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
-			Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
-
-			SplayerController->SetpRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-			SplayerController->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
-		}
-		Cast<APlayerSquadCharacter>(PlayerStartBattleArray[0])->PlaySelectedSound();
-
-		if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
-			Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
-
-		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
-		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
-
-		SplayerController->SetSquadControllerInput(true);
+		ActiveEnemyAI_AllCharTurnEnd();		
 	}
 }
 
+
+void ABattleController::ActiveEnemyAI_AllCharTurnEnd()
+{
+	// 턴이 끝난 플레이어의 배열을 StartBattleArray로 옮긴다.
+	ResetPlayerEndBattleArray();
+	// 비활성 되었던 플레이어 캐릭터의 HP바를 활성화 시키고 그리드 색상을 초록색으로 변경한다.
+	for (int32 i = 0; i < PlayerStartBattleArray.Num(); i++) {
+		AGrid* tempGrid = Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetUnderGrid();
+		Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
+		tempGrid->SetGridInfo_Material_Green();
+	}
+	// 죽지 않은 적군 캐릭터의 턴 상태를 턴 종료 상태로 변경
+	for (int32 i = 0; i < EnemyCharacters.Num(); i++) {
+		if (Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum != EStateEnum::SE_Death)
+			Cast<ASquadCharacter>(EnemyCharacters[i])->StateEnum = EStateEnum::SE_End;
+	}
+	// PlayerStartBattleArray에 배치된 아군캐릭터의 버프 시스템을 호출하고, 진행중인 몽타주를 정지시킨다.
+	for (int32 i = 0; i < PlayerStartBattleArray.Num(); i++) {
+		Cast<ASquadCharacter>(PlayerStartBattleArray[i])->StateEnum = EStateEnum::SE_Stay;
+		Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->Buff_System();
+		Cast<APlayerSquadCharacter>(PlayerStartBattleArray[i])->StopMontage();
+	}
+	// 플레이어의 조작을 가능하게 변경한다.
+	SplayerController->SetSquadControllerInput(true);
+	EnableInput(SplayerController);
+	// 디버그용 변수
+	WhosTurn = false;
+	gameMode->ChangeWhosTurnName(WhosTurn);
+	// 스킬 마커의 투명도를 변경시킨다.
+	gameMode->Set_BattleWidgetOpacity(1.f);
+	// PlayerStartBattleArray의 인덱스 0번에 배치된 캐릭터를
+	// SetSelectedCharacter(char)를 호출하여 SelectedCharacter로 할당한다.
+	SetSelectedCharacter(Cast<ASquadCharacter>(PlayerStartBattleArray[0]));
+
+	// SelectedCharacter에 할당된 캐릭터를 전투UI에 띄운다
+	gameMode->UpDateWidgetText(Cast<ASquadCharacter>(GetSelectedCharacter()));
+	gameMode->UpDateWidgetText_Right2(Cast<ASquadCharacter>(GetSelectedCharacter()));
+
+	// 죽지않은 아군 캐릭터의 스킬효과를 가감한다.
+	for (int32 i = 0; i < FriendlyCharacters.Num(); i++) {
+		if (Cast<ASquadCharacter>(FriendlyCharacters[i])->StateEnum != EStateEnum::SE_Death)
+			Cast<ASquadCharacter>(FriendlyCharacters[i])->Control_CCArray();
+	}
+	// SelectedCharacter의 강조 외곽선, 그리드를 활성화 시킨다.
+	// PlayerController의 SelectedCharacter의 정보를 전달한다.
+	if (Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter) == SystemState.SelectedCharacter) {
+		Cast<APlayerSquadCharacter>(SystemState.SelectedCharacter)->SetHighLight(true);
+		Cast<ASquadCharacter>(SystemState.SelectedCharacter)->SetGridOn();
+
+		SplayerController->SetpRayHitCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+		SplayerController->SetpRayHitSelectedCharacter(Cast<ASquadCharacter>(SystemState.SelectedCharacter));
+	}
+	Cast<APlayerSquadCharacter>(GetSelectedCharacter())->PlaySelectedSound();
+
+	// UI를 아군 전투 상황으로 초기화시킨다.
+	if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
+		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
+	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
+}
 // Enemy Start & End Battle Array
 
 void ABattleController::RemoveFromEnemyEndBattleArray(AActor* RemoveUnit)
@@ -582,13 +592,13 @@ void ABattleController::AddEnemyDeathCount()
 	EnemyDeathCount++;
 }
 
-void ABattleController::ResultBattle_PostInit()
+void ABattleController::ResultBattle_bindwidget()
 {
+	// 전투 종료 위젯과 연동
 	// 전투 종료시 카메라 위치 제어
 	gameIns->SCMIns->zoomswitch();
 	gameIns->SCMIns->IsBattleToExplore = true;
 	gameIns->SCMIns->MoveSwitch = true;
-
 
 	// Sound 제어
 	BGMComp->FadeOut(3.f , 0.f);
@@ -601,13 +611,11 @@ void ABattleController::ResultBattle_BattleEnd()
 	if(IsBattleStart == true) { 
 
 		// 전투 종료(플레이어 승리)시 탐색 상태로 변경
-
 		// 전투위젯 스킬 아이콘 비활성화
 		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(false);
 
 		// 아군 캐릭터 탐색 상태로 변경
-		for (int32 i = 0; i < FriendlyCharacters.Num(); i++)
-		{
+		for (int32 i = 0; i < FriendlyCharacters.Num(); i++) {
 			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->BeReload_BattleOver();
 			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->GetStatustBarWidget()->SetBarRenderOpacity(1.f);
 			Cast<APlayerSquadCharacter>(FriendlyCharacters[i])->Clear_CCArray();
@@ -619,23 +627,20 @@ void ABattleController::ResultBattle_BattleEnd()
 			Cast<UCharacterAnimInstance>(anim)->Set_IsBattle(false);
 			Cast<UCharacterAnimInstance>(anim)->Call_GetIsBattle();
 		}
-		// 캐릭터 탐색 위치 초기화
+		// 살아있는 플레이어 캐릭터의 수에 따라서 포지션 변경
 		gameIns->SCMIns->SetUnitPos_Last_Location(gameIns->SCMIns->FriendlyCharList.Num());
 		
+		// 전투에 사용된 배열들을 초기화
 		ClearArray();
 
+		// BattleController와 GameInsatnce의 전투확인 변수를 전투 종료로 변경
 		SetIsBattleStart(false);
 		gameIns->IsBattleStart = GetIsBattleStart();
-
-		int32 LastUnit_Loc = gameIns->SCMIns->FriendlyCharList.Num();
-
+		// GameInstance의 BattleTrigger 변수을 nullptr로 변경 
 		gameIns->BTIns = nullptr;
-
-		pTriggerBox->DeleteBattleTrigger();
-		pTriggerBox = nullptr;
-
-		EnemyDeathCount = 0;
-		PlayerDeathCount = 0;
+		// 이번 전투 필드를 삭제 및 nullptr로 변경
+		pBattleTrigger->DeleteBattleTrigger();
+		pBattleTrigger = nullptr;
 	}
 }
 

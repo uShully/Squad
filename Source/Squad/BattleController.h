@@ -112,7 +112,7 @@ public:
 	AActor* GetSelectedCharacter();	
 	
 	// 전투 종료시 호출되는 함수
-	void ResultBattle_PostInit();
+	void ResultBattle_bindwidget();
 	void ResultBattle_BattleEnd();
 
 	// 턴 시스템, 키 조작 캐릭터 변경 함수
@@ -121,8 +121,10 @@ public:
 	void ControlChangeSelectedCharacter();
 	void ReverseControlChangeSelectedCharacter();
 	
-	// 적군 AI 활성화
+	// 적군 AI 활성화 및 턴 종료
 	void ActiveEnemyAI();
+	void ActiveEnemyAI_AllCharTurnEnd();
+	
 	
 	// 적 사망시 호출
 	UFUNCTION()
@@ -137,7 +139,7 @@ public:
 public:	
 
 	// 전투 제어 변수
-	ABattleTrigger* pTriggerBox = nullptr;
+	ABattleTrigger* pBattleTrigger = nullptr;
 	bool WhosTurn = false; 	// false = 아군 true = 적군
 	bool IsSkillTargeting = false;
 
