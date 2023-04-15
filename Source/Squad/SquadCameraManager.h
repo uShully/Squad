@@ -32,7 +32,7 @@ protected:
 		void MoveRight(float Value);
 	void MoveChar(float Value);
 
-	void ChangeArmLeght(float DeltaTime);
+	void ChangeArmLegth(float DeltaTime);
 
 	void EventSpotOverlapLocation_Save();
 

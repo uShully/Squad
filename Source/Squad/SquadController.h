@@ -104,15 +104,7 @@ public:
 
 private:
 
-
-	FVector StartLocation;
-	FVector EndLocation;
-
-	FVector StartLoc;
-	FVector EndLoc;
 	float YOffset;
-
-
 
 	UPROPERTY()
 		int32 IsGamePlay = 0;
@@ -124,5 +116,3 @@ private:
 
 	
 };
-
-//FInputActionBinding testAB;

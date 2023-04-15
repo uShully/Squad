@@ -50,8 +50,7 @@ public:
 
 	void SetGridVisible();
 
-	void Spawned_Enemy();
-	void Spawned_Enemy_Boss();
+
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -130,6 +129,7 @@ public:
 	TArray<TArray<class AGrid*>> XGridArray;
 
 
+
 private:
 	
 	
@@ -140,8 +140,10 @@ private:
 	bool Obstacle_YPosSwitch = false;
 
 	void Spawned_ObstacleCheck();
-
 	void Spawned_EventObject();
+
+	void Spawned_Enemy();
+	void Spawned_Enemy_Boss();
 
 	float CorrentionSpawnObstacle =0.f;
 	FVector ObstacleLocCorrectionValue;
