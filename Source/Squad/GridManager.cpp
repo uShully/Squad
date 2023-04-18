@@ -706,7 +706,7 @@ void AGridManager::SetEnemyCharacterStatData(AEnemySquadCharacter* EnemyCharacte
 
 int32 AGridManager::SetEnemyStatRand()
 {
-	TMap<int32, float> FinalMap;
+	TMap<int32, float> FinalResult;
 	TMap < int32, float > brunchProb;
 
 	USquadGameInstance* gameIns = Cast<USquadGameInstance>(GetWorld()->GetGameInstance());
@@ -730,18 +730,18 @@ int32 AGridManager::SetEnemyStatRand()
 	for (auto& CalTotalProbPair : brunchProb) {
 		TotalProb += CalTotalProbPair.Value;
 	}
-	// 병과 번호와 병과 확률을 퍼센티지로 변환시켜서 FinalMap에 저장
+	// 병과 번호와 병과 확률을 퍼센티지로 변환시켜서 FinalResult에 저장
 	for (auto& ToCastPair : brunchProb) {
 		float MProb = ToCastPair.Value / TotalProb;
 
-		FinalMap.Add(ToCastPair.Key, MProb);
+		FinalResult.Add(ToCastPair.Key, MProb);
 	}
 
 	// 랜덤으로 정해진 실수를 바탕으로 누적확률계산을 하여 최종적으로 선출된 병과번호를 반환시킨다
 	float randPivot = FMath::RandRange(0.f, 1.f);
 	double acc = 0;
 
-	for (auto& fianlCalc : FinalMap) {
+	for (auto& fianlCalc : FinalResult) {
 		acc += fianlCalc.Value;
 
 		if (randPivot <= acc) {

@@ -50,7 +50,6 @@ public:
 
 	void DebugFuc();
 
-	bool testbool = false;
 
 public:
 	UPROPERTY()
@@ -68,6 +67,6 @@ private:
 
 	bool PlayerPawn = false;
 	bool AIPawn = false;
-
+	bool Spreadbool = false;
 	
 };

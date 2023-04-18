@@ -139,15 +139,17 @@ void ABattleController::StartTurnSystem_init()
 {
 	SetIsBattleStart(true);
 
-	// UI	
-	gameMode->ViewBattleWidget();	
+	// 전투 UI 불러오기
+	// 기획 변경시 수정 예상 지점
+	// 탐색 UI, 전투UI 분리시 수정 예상 
+	//gameMode->ViewBattleWidget();	
 
 	if (gameMode->GetCurrentWidget() == Cast<UBattleWidget>(gameMode->GetCurrentWidget()))
 		Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 
 	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Set_BattleWidgetSkilliconOpacity(true);
 	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->Init_SkillButtonColor();
-		
+	
 	// 전투 초기화 - 게임 인스턴스 변수 제어
 	gameIns->SelectedCharacter = nullptr;
 	gameIns->IsBattleStart = true;
@@ -175,11 +177,9 @@ void ABattleController::StartTurnSystem_init()
 	BGMComp->FadeIn(3.f);
 
 	// 람다식 - 1.5초 후 턴 시작 시스템 호출
-	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]()
-		{
+	GetWorld()->GetTimerManager().SetTimer(WaitHandle, FTimerDelegate::CreateLambda([&]() {
 			StartTurnSystem();
-
-		}), 1.5f, false);
+		}), 1.5f, false); 
 }
 
 void ABattleController::ControlCharacterCameraMovement(bool PlayerMovementSwitch)
@@ -207,6 +207,7 @@ void ABattleController::StartTurnSystem()
 		Cast<ASquadCharacter>(AllCharacters[i])->StateEnum = EStateEnum::SE_End;
 	}	
 	
+	// 현재는 기획상 플레이어에게 선공으로 고정, 향후 변경 가능성 있음
 	// 플레이어가 선공이면 아군 캐릭터는 대기모드, 적군 캐릭터는 종료모드
 	if (!WhosTurn) 
 	{
@@ -232,13 +233,9 @@ void ABattleController::StartTurnSystem()
 		Cast<UCharacterAnimInstance>(anim)->Set_IsBattle(true);
 		Cast<UCharacterAnimInstance>(anim)->Call_GetIsBattle();
 	}
-
-	// 전투 위젯 초기화
-	Cast<UBattleWidget>(gameMode->GetCurrentWidget())->ClearWidget_SkillPart();
 	   
 	// 전투 시작시 현재 선택된 캐릭터로 전투 정보 초기화
 	APlayerSquadCharacter* SelectedChar = Cast<APlayerSquadCharacter>(GetSelectedCharacter());
-	SetSelectedCharacter(Cast<ASquadCharacter>(SelectedChar));
 
 	SelectedChar->SetHighLight(true);
 	SelectedChar->SetGridOn();

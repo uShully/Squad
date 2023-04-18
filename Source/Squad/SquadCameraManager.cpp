@@ -144,7 +144,7 @@ void ASquadCameraManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	ChangeArmLeght(DeltaTime);
+	ChangeArmLegth(DeltaTime);
 	Control_SetBattleCameraLocation(DeltaTime);
 }
 
@@ -302,7 +302,7 @@ void ASquadCameraManager::SetUnitMovement_Delay(int32 num)
 
 // 디버그용 기능
 
-void ASquadCameraManager::ChangeArmLeght(float DeltaTime)
+void ASquadCameraManager::ChangeArmLegth(float DeltaTime)
 {
 	if (ZoomBool)
 	{

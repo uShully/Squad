@@ -115,7 +115,7 @@ void ASquadAIController::PlayerCharacter_SpreadOut()
 			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->IsSpreadOut = true;
 			Cast<UCharacterAnimInstance>(PlayerChar->animInstance)->Call_GetIsSpreadOut();
 
-			testbool = true;						
+			Spreadbool = true;						
 		}
 	}
 }
@@ -177,7 +177,7 @@ void ASquadAIController::EnemyCharacter_ShotAI()
 
 void ASquadAIController::Simple(FAIRequestID RequestID, EPathFollowingResult::Type Result)
 {
-	if(testbool == true) { 
+	if(Spreadbool == true) { 
 		if (PlayerChar != nullptr)
 			PlayerChar->Character_BattleRotator_Start = true;
 	}
